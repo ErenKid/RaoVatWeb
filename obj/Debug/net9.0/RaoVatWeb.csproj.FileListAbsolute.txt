@@ -198,3 +198,4 @@ C:\Users\fuoc1\RaoVatWeb\obj\Debug\net9.0\refint\RaoVatWeb.dll
 C:\Users\fuoc1\RaoVatWeb\obj\Debug\net9.0\RaoVatWeb.pdb
 C:\Users\fuoc1\RaoVatWeb\obj\Debug\net9.0\RaoVatWeb.genruntimeconfig.cache
 C:\Users\fuoc1\RaoVatWeb\obj\Debug\net9.0\ref\RaoVatWeb.dll
+C:\Users\fuoc1\RaoVatWeb\obj\Debug\net9.0\RaoVatWeb.sourcelink.json

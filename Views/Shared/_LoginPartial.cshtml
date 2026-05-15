@@ -1,0 +1,60 @@
+<ul class="navbar-nav ms-auto">
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <li class="nav-item">
+            <span class="nav-link">
+                Xin chào, @User.Identity.Name
+            </span>
+        </li>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                    Quản trị
+                </a>
+            </li>
+        }
+
+        @if (User.IsInRole("Vip"))
+        {
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Vip" asp-action="Index">
+                    Khu vực VIP
+                </a>
+            </li>
+        }
+
+        @if (User.IsInRole("User"))
+        {
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Member" asp-action="Index">
+                    Thành viên
+                </a>
+            </li>
+        }
+
+        <li class="nav-item">
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-link nav-link">
+                    Đăng xuất
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Account" asp-action="Login">
+                Đăng nhập
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Account" asp-action="Register">
+                Đăng ký
+            </a>
+        </li>
+    }
+</ul>

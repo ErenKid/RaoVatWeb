@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using RaoVatWeb.Models;
 
 namespace RaoVatWeb.Data
@@ -10,15 +9,12 @@ namespace RaoVatWeb.Data
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
-
-            await dbContext.Database.MigrateAsync();
 
             string[] roles = { "Admin", "User", "Vip" };
 
             foreach (var role in roles)
             {
-                bool roleExists = await roleManager.RoleExistsAsync(role);
+                var roleExists = await roleManager.RoleExistsAsync(role);
 
                 if (!roleExists)
                 {
@@ -26,61 +22,66 @@ namespace RaoVatWeb.Data
                 }
             }
 
-            string adminEmail = configuration["AdminAccount:Email"] ?? "admin@raovat.com";
-            string adminPassword = configuration["AdminAccount:Password"] ?? "Admin@123456";
-            string adminFullName = configuration["AdminAccount:FullName"] ?? "Administrator";
+            var adminEmail = configuration["AdminAccount:Email"] ?? "admin@raovat.com";
+            var adminPassword = configuration["AdminAccount:Password"] ?? "Admin@123456";
+            var adminFullName = configuration["AdminAccount:FullName"] ?? "Administrator";
 
-            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            await CreateUserIfNotExists(
+                userManager,
+                adminEmail,
+                adminPassword,
+                adminFullName,
+                "Admin",
+                isVip: false
+            );
 
-            if (adminUser == null)
+            await CreateUserIfNotExists(
+                userManager,
+                "vip@raovat.com",
+                "Vip@123456",
+                "Thành viên VIP Demo",
+                "Vip",
+                isVip: true
+            );
+        }
+
+        private static async Task CreateUserIfNotExists(
+            UserManager<ApplicationUser> userManager,
+            string email,
+            string password,
+            string fullName,
+            string roleName,
+            bool isVip)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
             {
-                adminUser = new ApplicationUser
+                user = new ApplicationUser
                 {
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    FullName = adminFullName,
+                    UserName = email,
+                    Email = email,
+                    FullName = fullName,
                     EmailConfirmed = true,
+                    IsVip = isVip,
+                    VipExpiredAt = isVip ? DateTime.Now.AddMonths(1) : null,
+                    IsLocked = false,
                     CreatedAt = DateTime.Now
                 };
 
-                var result = await userManager.CreateAsync(adminUser, adminPassword);
+                var result = await userManager.CreateAsync(user, password);
 
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                    await userManager.AddToRoleAsync(user, roleName);
                 }
             }
-
-            if (!await dbContext.Categories.AnyAsync())
+            else
             {
-                dbContext.Categories.AddRange(
-                    new Category { Name = "Mua bán sản phẩm", Description = "Các tin mua bán sản phẩm thông thường" },
-                    new Category { Name = "Đồ điện tử", Description = "Điện thoại, laptop, thiết bị điện tử" },
-                    new Category { Name = "Xe cộ", Description = "Xe máy, ô tô, phụ tùng xe" },
-                    new Category { Name = "Đồ gia dụng", Description = "Nội thất, thiết bị gia đình" },
-                    new Category { Name = "Thời trang", Description = "Quần áo, giày dép, phụ kiện" },
-                    new Category { Name = "Cho thuê", Description = "Tin cho thuê tài sản, phòng trọ, mặt bằng" },
-                    new Category { Name = "Dịch vụ", Description = "Tư vấn, sửa chữa, hỗ trợ dịch vụ" },
-                    new Category { Name = "Việc làm", Description = "Tuyển dụng hoặc tìm việc" },
-                    new Category { Name = "Trao đổi hàng hóa", Description = "Tin trao đổi sản phẩm, hàng hóa" },
-                    new Category { Name = "Khác", Description = "Các loại tin rao vặt khác" }
-                );
-
-                await dbContext.SaveChangesAsync();
-            }
-
-            if (!await dbContext.Areas.AnyAsync())
-            {
-                dbContext.Areas.AddRange(
-                    new Area { Name = "TP. Hồ Chí Minh" },
-                    new Area { Name = "Hà Nội" },
-                    new Area { Name = "Đà Nẵng" },
-                    new Area { Name = "Cần Thơ" },
-                    new Area { Name = "Bình Dương" },
-                    new Area { Name = "Đồng Nai" }
-                );
-
-                await dbContext.SaveChangesAsync();
+                if (!await userManager.IsInRoleAsync(user, roleName))
+                {
+                    await userManager.AddToRoleAsync(user, roleName);
+                }
             }
         }
     }
