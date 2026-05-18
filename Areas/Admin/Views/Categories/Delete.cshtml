@@ -1,0 +1,35 @@
+@model RaoVatWeb.Models.Category
+
+@{
+    ViewData["Title"] = "Ẩn danh mục";
+}
+
+<div class="container mt-4">
+    <h2>Ẩn danh mục</h2>
+
+    <div class="alert alert-warning mt-3">
+        Bạn có chắc chắn muốn ẩn danh mục này không?
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p><strong>ID:</strong> @Model.CategoryId</p>
+            <p><strong>Tên danh mục:</strong> @Model.Name</p>
+            <p><strong>Mô tả:</strong> @Model.Description</p>
+
+            <form asp-area="Admin" asp-controller="Categories" asp-action="DeleteConfirmed" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="id" value="@Model.CategoryId" />
+
+                <button type="submit" class="btn btn-danger">
+                    Xác nhận ẩn
+                </button>
+
+                <a asp-area="Admin" asp-controller="Categories" asp-action="Index" class="btn btn-secondary">
+                    Hủy
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

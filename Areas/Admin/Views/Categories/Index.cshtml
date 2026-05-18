@@ -1,17 +1,109 @@
+@model IEnumerable<RaoVatWeb.Models.Category>
+
 @{
     ViewData["Title"] = "Quản lý danh mục";
 }
 
 <div class="container mt-4">
-    <h2>Quản lý danh mục</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý danh mục</h2>
 
-    <div class="alert alert-info">
-        Đây là trang nền tảng cho chức năng quản lý danh mục tin rao vặt.
+        <a asp-area="Admin" asp-controller="Categories" asp-action="Create" class="btn btn-primary">
+            Thêm danh mục
+        </a>
     </div>
 
-    <p>Sau này Admin sẽ có thể thêm, sửa, xóa hoặc ẩn danh mục tại đây.</p>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
 
-    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-secondary">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Tên danh mục</th>
+                        <th>Mô tả</th>
+                        <th style="width: 140px;">Trạng thái</th>
+                        <th style="width: 220px;">Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.CategoryId</td>
+                                <td>@item.Name</td>
+                                <td>@item.Description</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success">Đang hiển thị</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Đã ẩn</span>
+                                    }
+                                </td>
+                                <td>
+                                   <a asp-area="Admin"
+                                    asp-controller="Categories"
+                                    asp-action="Edit"
+                                    asp-route-id="@item.CategoryId"
+                                    class="btn btn-sm btn-warning">
+                                        Sửa
+                                    </a>
+
+                                    @if (item.IsActive)
+                                    {
+                                        <a asp-area="Admin"
+                                        asp-controller="Categories"
+                                        asp-action="Delete"
+                                        asp-route-id="@item.CategoryId"
+                                        class="btn btn-sm btn-danger">
+                                            Ẩn
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <form asp-area="Admin"
+                                            asp-controller="Categories"
+                                            asp-action="Restore"
+                                            asp-route-id="@item.CategoryId"
+                                            method="post"
+                                            class="d-inline">
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                Khôi phục
+                                            </button>
+                                        </form>
+                                    }   
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                Chưa có danh mục nào.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-secondary mt-3">
         Quay lại Dashboard
     </a>
 </div>
