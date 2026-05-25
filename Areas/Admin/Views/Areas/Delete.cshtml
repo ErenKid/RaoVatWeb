@@ -1,0 +1,35 @@
+@model RaoVatWeb.Models.Area
+
+@{
+    ViewData["Title"] = "Ẩn khu vực";
+}
+
+<div class="container mt-4">
+    <h2>Ẩn khu vực</h2>
+
+    <div class="alert alert-warning mt-3">
+        Bạn có chắc chắn muốn ẩn khu vực này không?
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p><strong>ID:</strong> @Model.AreaId</p>
+            <p><strong>Tên khu vực:</strong> @Model.Name</p>
+            <p><strong>Khu vực cha:</strong> @Model.ParentArea</p>
+
+            <form asp-area="Admin" asp-controller="Areas" asp-action="DeleteConfirmed" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="id" value="@Model.AreaId" />
+
+                <button type="submit" class="btn btn-danger">
+                    Xác nhận ẩn
+                </button>
+
+                <a asp-area="Admin" asp-controller="Areas" asp-action="Index" class="btn btn-secondary">
+                    Hủy
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

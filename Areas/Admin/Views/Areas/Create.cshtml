@@ -1,0 +1,63 @@
+@model RaoVatWeb.ViewModels.AdminAreaFormViewModel
+
+@{
+    ViewData["Title"] = "Thêm khu vực";
+}
+
+<div class="container mt-4">
+    <h2>Thêm khu vực</h2>
+
+    <form asp-area="Admin"
+          asp-controller="Areas"
+          asp-action="Create"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Tên khu vực</label>
+            <input asp-for="Name" class="form-control" placeholder="Ví dụ: TP.HCM, Hà Nội, Bình Dương..." />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ParentAreaId" class="form-label">Khu vực cha</label>
+
+            <select asp-for="ParentAreaId"
+                    asp-items="@(ViewBag.ParentAreaId as SelectList)"
+                    class="form-select">
+                <option value="">-- Không chọn nếu là khu vực cha --</option>
+            </select>
+
+            <small class="text-muted">
+                Ví dụ: TP.HCM chọn Miền Nam, Hà Nội chọn Miền Bắc.
+            </small>
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label">
+                Hiển thị khu vực
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Lưu khu vực
+        </button>
+
+        <a asp-area="Admin"
+           asp-controller="Areas"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại
+        </a>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

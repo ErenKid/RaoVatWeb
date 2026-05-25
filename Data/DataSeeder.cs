@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using RaoVatWeb.Models;
 
 namespace RaoVatWeb.Data
@@ -44,7 +45,32 @@ namespace RaoVatWeb.Data
                 isVip: true
             );
         }
+private static async Task SeedAreasAsync(ApplicationDbContext context)
+{
+    if (!await context.Areas.AnyAsync(a => a.Name == "Miền Nam"))
+    {
+        context.Areas.Add(new Area
+        {
+            Name = "Miền Nam",
+            ParentAreaId = null,
+            IsActive = true,
+            CreatedAt = DateTime.Now
+        });
+    }
 
+    if (!await context.Areas.AnyAsync(a => a.Name == "Miền Bắc"))
+    {
+        context.Areas.Add(new Area
+        {
+            Name = "Miền Bắc",
+            ParentAreaId = null,
+            IsActive = true,
+            CreatedAt = DateTime.Now
+        });
+    }
+
+    await SeedAreasAsync(context);
+}
         private static async Task CreateUserIfNotExists(
             UserManager<ApplicationUser> userManager,
             string email,
