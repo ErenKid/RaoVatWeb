@@ -1,0 +1,87 @@
+@using RaoVatWeb.Models.Enums
+@model IEnumerable<RaoVatWeb.Models.Post>
+
+@{
+    ViewData["Title"] = "Tin của tôi";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Tin của tôi</h2>
+
+        <a asp-controller="Posts"
+           asp-action="Create"
+           class="btn btn-primary">
+            + Đăng tin mới
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Bạn chưa có tin đăng nào.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tiêu đề</th>
+                    <th>Danh mục</th>
+                    <th>Khu vực</th>
+                    <th>Giá</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày đăng</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Title</td>
+
+                        <td>@(item.Category != null ? item.Category.Name : "Chưa có")</td>
+
+                        <td>@(item.Area != null ? item.Area.Name : "Chưa có")</td>
+
+                        <td>@string.Format("{0:N0} VNĐ", item.Price)</td>
+
+                        <td>
+                          @if (item.Status == PostStatus.Pending)
+                        {
+                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                        }
+                        else if (item.Status == PostStatus.Approved)
+                        {
+                            <span class="badge bg-success">Đã duyệt</span>
+                        }
+                        else if (item.Status == PostStatus.Rejected)
+                        {
+                            <span class="badge bg-danger">Bị từ chối</span>
+                        }
+                        else if (item.Status == PostStatus.Hidden)
+                        {
+                            <span class="badge bg-secondary">Đã ẩn</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.Status</span>
+                        }
+                        </td>
+
+                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
