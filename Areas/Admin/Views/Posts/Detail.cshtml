@@ -1,0 +1,65 @@
+@model RaoVatWeb.Models.Post
+
+@{
+    ViewData["Title"] = "Chi tiết tin rao vặt";
+}
+
+<div class="container mt-4">
+    <a asp-controller="Posts"
+       asp-action="Index"
+       class="btn btn-secondary mb-3">
+        Quay lại danh sách
+    </a>
+
+    <div class="card">
+        <div class="card-body">
+            @if (Model.IsVipPriority)
+            {
+                <span class="badge bg-danger mb-2">Tin nổi bật</span>
+            }
+
+            <h2>@Model.Title</h2>
+
+            <p class="text-muted">
+                Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                |
+                Lượt xem: @Model.ViewCount
+            </p>
+
+            <hr />
+
+            <p>
+                <strong>Giá:</strong>
+                @string.Format("{0:N0} VNĐ", Model.Price)
+            </p>
+
+            <p>
+                <strong>Danh mục:</strong>
+                @(Model.Category != null ? Model.Category.Name : "Chưa có")
+            </p>
+
+            <p>
+                <strong>Khu vực:</strong>
+                @(Model.Area != null ? Model.Area.Name : "Chưa có")
+            </p>
+
+            <hr />
+
+            <h5>Mô tả chi tiết</h5>
+            <p>@Model.Description</p>
+
+            <hr />
+
+            <h5>Thông tin liên hệ</h5>
+            <p>
+                <strong>Người liên hệ:</strong>
+                @Model.ContactName
+            </p>
+
+            <p>
+                <strong>Số điện thoại:</strong>
+                @Model.ContactPhone
+            </p>
+        </div>
+    </div>
+</div>

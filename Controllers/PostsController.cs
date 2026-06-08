@@ -15,13 +15,89 @@ namespace RaoVatWeb.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private async Task LoadDropdownsAsync(int? selectedCategoryId = null, int? selectedAreaId = null)
+        {
+            var categories = await _context.Categories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
+            var areas = await _context.Areas
+                .Where(a => a.IsActive)
+                .Where(a => a.ParentAreaId != null)
+                .OrderBy(a => a.Name)
+                .ToListAsync();
+                 ViewBag.Categories = new SelectList(categories, "CategoryId", "Name", selectedCategoryId);
+                ViewBag.Areas = new SelectList(areas, "AreaId", "Name", selectedAreaId);
+            }
+        
         public PostsController(ApplicationDbContext context,
         UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
+         [AllowAnonymous]
+        public async Task<IActionResult> Index(string? keyword, int? categoryId, int? areaId)
+        {
+            await LoadDropdownsAsync(categoryId, areaId);
+
+            var query = _context.Posts
+                .Include(p => p.Category)
+                .Include(p => p.Area)
+                .Where(p => p.Status == PostStatus.Approved)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                query = query.Where(p =>
+                    p.Title.Contains(keyword) ||
+                    p.Description.Contains(keyword));
+            }
+
+                if (categoryId.HasValue)
+                {
+                    query = query.Where(p => p.CategoryId == categoryId.Value);
+                }
+
+                if (areaId.HasValue)
+                {
+                    query = query.Where(p => p.AreaId == areaId.Value);
+                }
+
+                var posts = await query
+                    .OrderByDescending(p => p.IsVipPriority)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .ToListAsync();
+
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.AreaId = areaId;
+
+                return View(posts);
+            }
+
+            [AllowAnonymous]
+            public async Task<IActionResult> Details(int id)
+            {
+                var post = await _context.Posts
+                    .Include(p => p.Category)
+                    .Include(p => p.Area)
+                    .FirstOrDefaultAsync(p =>
+                        p.PostId == id &&
+                        p.Status == PostStatus.Approved);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                post.ViewCount += 1;
+                await _context.SaveChangesAsync();
+
+                return View(post);
+            }
+
 
         public async Task<IActionResult> Create()
 {
@@ -94,23 +170,6 @@ public async Task<IActionResult> Create(PostCreateViewModel model)
                 .ToListAsync();
 
             return View(posts);
-        }
-
-        private async Task LoadDropdownsAsync()
-        {
-            var categories = await _context.Categories
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
-
-            var areas = await _context.Areas
-                .Where(a => a.IsActive)
-                .Where(a => a.ParentAreaId != null)
-                .OrderBy(a => a.Name)
-                .ToListAsync();
-
-            ViewBag.Categories = new SelectList(categories, "CategoryId", "Name");
-            ViewBag.Areas = new SelectList(areas, "AreaId", "Name");
         }
     }
 }
