@@ -13,7 +13,8 @@
 
     <form asp-controller="Posts"
           asp-action="Edit"
-          method="post">
+          method="post"
+          enctype="multipart/form-data">
 
         @Html.AntiForgeryToken()
 
@@ -23,7 +24,9 @@
 
         <div class="mb-3">
             <label asp-for="Title" class="form-label">Tiêu đề tin đăng</label>
-            <input asp-for="Title" class="form-control" />
+            <input asp-for="Title"
+                   class="form-control"
+                   placeholder="Ví dụ: Bán laptop Dell cũ" />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
 
@@ -53,7 +56,8 @@
                    type="number"
                    min="0"
                    step="1000"
-                   class="form-control" />
+                   class="form-control"
+                   placeholder="Ví dụ: 8500000" />
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
 
@@ -61,8 +65,62 @@
             <label asp-for="Description" class="form-label">Mô tả chi tiết</label>
             <textarea asp-for="Description"
                       class="form-control"
-                      rows="5"></textarea>
+                      rows="5"
+                      placeholder="Mô tả tình trạng sản phẩm, dịch vụ, thông tin giao dịch..."></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        @if (Model.ExistingImages != null && Model.ExistingImages.Count > 0)
+{
+    <div class="mb-3">
+        <label class="form-label">Hình ảnh hiện tại</label>
+
+        <div class="row">
+            @foreach (var image in Model.ExistingImages)
+            {
+                <div class="col-md-3 mb-3">
+                    <div class="position-relative">
+                        <img src="@image.ImageUrl"
+                             class="img-fluid rounded border"
+                             style="height: 160px; width: 100%; object-fit: cover;"
+                             alt="@Model.Title" />
+
+                        <button type="submit"
+                                asp-controller="Posts"
+                                asp-action="DeleteImage"
+                                asp-route-imageId="@image.PostImageId"
+                                asp-route-postId="@Model.PostId"
+                                formmethod="post"
+                                formnovalidate
+                                class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
+                                onclick="return confirm('Bạn có chắc muốn xóa ảnh này không?');">
+                            ×
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-light">
+        Tin này chưa có hình ảnh.
+    </div>
+}
+
+        <div class="mb-3">
+            <label class="form-label">Thêm hình ảnh mới</label>
+
+            <input name="Images"
+                   type="file"
+                   multiple
+                   accept=".jpg,.jpeg,.png"
+                   class="form-control" />
+
+            <small class="text-muted">
+                Nếu chọn ảnh mới, hệ thống sẽ thêm vào danh sách ảnh hiện tại. Ảnh cũ vẫn được giữ lại.
+            </small>
         </div>
 
         <button type="submit" class="btn btn-primary">

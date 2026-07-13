@@ -9,8 +9,8 @@
 
     <form asp-controller="Posts"
           asp-action="Create"
-          method="post">
-
+          method="post"
+            enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -60,7 +60,21 @@
                       placeholder="Mô tả tình trạng sản phẩm, dịch vụ, thông tin giao dịch..."></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
+        <div class="mb-3">
+            <label asp-for="Images" class="form-label">Hình ảnh tin đăng</label>
 
+            <input asp-for="Images"
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png"
+                class="form-control" />
+
+            <small class="text-muted">
+                Chỉ chấp nhận JPG, JPEG, PNG. Mỗi ảnh tối đa 5MB.
+            </small>
+
+            <span asp-validation-for="Images" class="text-danger"></span>
+        </div>
       
 
         <button type="submit" class="btn btn-primary">

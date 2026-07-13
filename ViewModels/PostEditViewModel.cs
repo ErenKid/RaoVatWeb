@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-
+using Microsoft.AspNetCore.Http;
+using RaoVatWeb.Models;
 namespace RaoVatWeb.ViewModels
 {
     public class PostEditViewModel
@@ -21,5 +22,9 @@ namespace RaoVatWeb.ViewModels
 
         [Required(ErrorMessage = "Vui lòng chọn khu vực")]
         public int AreaId { get; set; }
+
+        public List<IFormFile>? Images { get; set; }
+
+        public List<PostImage> ExistingImages { get; set; } = new List<PostImage>();
     }
 }

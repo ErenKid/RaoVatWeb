@@ -21,8 +21,9 @@ namespace RaoVatWeb.Areas.Admin.Controllers
             var post = await _context.Posts
                 .Include(p => p.Category)
                 .Include(p => p.Area)
+                .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.PostId == id);
-
+                
             if (post == null)
             {
                 return NotFound();

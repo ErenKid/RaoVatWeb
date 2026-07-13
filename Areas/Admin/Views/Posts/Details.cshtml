@@ -66,7 +66,28 @@
             </p>
 
             <hr />
+            <h5>Hình ảnh tin đăng</h5>
 
+            @if (Model.Images != null && Model.Images.Any())
+            {
+                <div class="row mb-3">
+                    @foreach (var image in Model.Images)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <img src="@image.ImageUrl"
+                                class="img-fluid rounded border"
+                                style="height: 220px; width: 100%; object-fit: cover;"
+                                alt="@Model.Title" />
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light">
+                    Tin này chưa có hình ảnh.
+                </div>
+            }
             <h5>Mô tả tin đăng</h5>
             <p>@Model.Description</p>
 

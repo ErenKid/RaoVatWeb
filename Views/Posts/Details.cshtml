@@ -28,6 +28,27 @@
 
             <hr />
 
+            @if (Model.Images != null && Model.Images.Any())
+            {
+                <div class="row mb-3">
+                    @foreach (var image in Model.Images)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <img src="@image.ImageUrl"
+                                 class="img-fluid rounded border"
+                                 style="height: 250px; width: 100%; object-fit: cover;"
+                                 alt="@Model.Title" />
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light">
+                    Tin này chưa có hình ảnh.
+                </div>
+            }
+
             <p>
                 <strong>Giá:</strong>
                 @string.Format("{0:N0} VNĐ", Model.Price)
