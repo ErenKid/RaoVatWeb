@@ -52,5 +52,7 @@ namespace RaoVatWeb.Models
 
         public DateTime? UpdatedAt { get; set; }
         public ICollection<PostImage> Images { get; set; } = new List<PostImage>();
+        public ICollection<ContactMessage> ContactMessages { get; set; } = new List<ContactMessage>();
+        public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
     }
 }

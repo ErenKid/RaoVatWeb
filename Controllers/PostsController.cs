@@ -300,28 +300,90 @@ public async Task<IActionResult> DeleteImage(int imageId, int postId)
     return RedirectToAction(nameof(Edit), new { id = postId });
 }
             [AllowAnonymous]
-public async Task<IActionResult> Details(int id)
-{
-    var post = await _context.Posts
-        .Include(p => p.Category)
-        .Include(p => p.Area)
-        .Include(p => p.Images)
-        .FirstOrDefaultAsync(p =>
-            p.PostId == id &&
-            p.Status == PostStatus.Approved);
+            public async Task<IActionResult> Details(int id)
+            {
+                var post = await _context.Posts
+                    .Include(p => p.Category)
+                    .Include(p => p.Area)
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(p =>
+                        p.PostId == id &&
+                        p.Status == PostStatus.Approved);
 
-    if (post == null)
-    {
-        return NotFound();
-    }
+                if (post == null)
+                {
+                    return NotFound();
+                }
 
-    post.ViewCount += 1;
-    await _context.SaveChangesAsync();
+                post.ViewCount += 1;
+                await _context.SaveChangesAsync();
 
-    return View(post);
-}
+                return View(post);
+            }
 
+            [AllowAnonymous]
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> SendContact(
+                int postId,
+                string senderName,
+                string senderPhone,
+                string? senderEmail,
+                string messageContent)
+            {
+                var post = await _context.Posts
+                    .FirstOrDefaultAsync(p =>
+                        p.PostId == postId &&
+                        p.Status == PostStatus.Approved);
 
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                if (string.IsNullOrWhiteSpace(senderName) ||
+                    string.IsNullOrWhiteSpace(senderPhone) ||
+                    string.IsNullOrWhiteSpace(messageContent))
+                {
+                    TempData["Error"] = "Vui lòng nhập đầy đủ họ tên, số điện thoại và nội dung liên hệ.";
+                    return RedirectToAction(nameof(Details), new { id = postId });
+                }
+
+                var contact = new ContactMessage
+                {
+                    PostId = postId,
+                    SenderName = senderName.Trim(),
+                    SenderPhone = senderPhone.Trim(),
+                    SenderEmail = senderEmail?.Trim(),
+                    MessageContent = messageContent.Trim(),
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.ContactMessages.Add(contact);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Gửi liên hệ thành công. Người đăng tin sẽ nhận được thông tin của bạn.";
+                return RedirectToAction(nameof(Details), new { id = postId });
+            }
+
+                        public async Task<IActionResult> ReceivedContacts()
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                if (currentUser == null)
+                {
+                    return Challenge();
+                }
+
+                var contacts = await _context.ContactMessages
+                    .Include(c => c.Post)
+                    .Where(c => c.Post != null && c.Post.UserId == currentUser.Id)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ToListAsync();
+
+                return View(contacts);
+            }
         public async Task<IActionResult> Create()
 {
     await LoadDropdownsAsync();

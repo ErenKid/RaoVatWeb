@@ -1,0 +1,83 @@
+@model RaoVatWeb.ViewModels.ChatDetailViewModel
+
+@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container mt-4">
+    <a asp-controller="Chats"
+       asp-action="Index"
+       class="btn btn-secondary mb-3">
+        Quay lại tin nhắn
+    </a>
+
+    <div class="card">
+        <div class="card-header">
+            <strong>@Model.PartnerName</strong>
+            <div class="text-muted small">
+                Tin rao: @Model.PostTitle
+            </div>
+        </div>
+
+        <div class="card-body" style="min-height: 400px;">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (Model.Messages.Count == 0)
+            {
+                <div class="text-muted">
+                    Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.
+                </div>
+            }
+            else
+            {
+                foreach (var message in Model.Messages)
+                {
+                    var isMine = message.SenderId == Model.CurrentUserId;
+                    var alignClass = isMine ? "text-end" : "text-start";
+                    var bubbleStyle = isMine ? "background-color:#d1e7dd;" : "background-color:#f8f9fa;";
+
+                    <div class="mb-3 @alignClass">
+                        <div class="d-inline-block p-2 rounded border"
+                             style="max-width: 70%; @bubbleStyle">
+                            <div>
+                                @message.Content
+                            </div>
+
+                            <div class="small text-muted mt-1">
+                                @message.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="card-footer">
+            <form asp-controller="Chats"
+                  asp-action="Send"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="conversationId"
+                       value="@Model.ConversationId" />
+
+                <div class="input-group">
+                    <input name="content"
+                           class="form-control"
+                           placeholder="Nhập tin nhắn..." />
+
+                    <button type="submit" class="btn btn-primary">
+                        Gửi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

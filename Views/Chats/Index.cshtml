@@ -1,0 +1,50 @@
+@model IEnumerable<RaoVatWeb.ViewModels.ChatInboxItemViewModel>
+
+@{
+    ViewData["Title"] = "Tin nhắn";
+}
+
+<div class="container mt-4">
+    <h2>Tin nhắn</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Bạn chưa có cuộc trò chuyện nào.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tin rao</th>
+                    <th>Người trò chuyện</th>
+                    <th>Tin nhắn cuối</th>
+                    <th>Cập nhật</th>
+                    <th style="width: 120px;">Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.PostTitle</td>
+                        <td>@item.PartnerName</td>
+                        <td>@item.LastMessage</td>
+                        <td>@item.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <a asp-controller="Chats"
+                               asp-action="Details"
+                               asp-route-id="@item.ConversationId"
+                               class="btn btn-sm btn-primary">
+                                Mở chat
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RaoVatWeb.Data;
 
@@ -11,9 +12,11 @@ using RaoVatWeb.Data;
 namespace RaoVatWeb.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260713090554_AddContactMessages")]
+    partial class AddContactMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -297,38 +300,6 @@ namespace RaoVatWeb.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("RaoVatWeb.Models.ChatMessage", b =>
-                {
-                    b.Property<int>("ChatMessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ChatMessageId"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("ChatMessageId");
-
-                    b.HasIndex("ConversationId");
-
-                    b.ToTable("ChatMessages");
-                });
-
             modelBuilder.Entity("RaoVatWeb.Models.ContactMessage", b =>
                 {
                     b.Property<int>("ContactMessageId")
@@ -369,38 +340,6 @@ namespace RaoVatWeb.Migrations
                     b.HasIndex("PostId");
 
                     b.ToTable("ContactMessages");
-                });
-
-            modelBuilder.Entity("RaoVatWeb.Models.Conversation", b =>
-                {
-                    b.Property<int>("ConversationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ConversationId"));
-
-                    b.Property<string>("BuyerId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("PostId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SellerId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("ConversationId");
-
-                    b.HasIndex("PostId");
-
-                    b.ToTable("Conversations");
                 });
 
             modelBuilder.Entity("RaoVatWeb.Models.Post", b =>
@@ -561,32 +500,10 @@ namespace RaoVatWeb.Migrations
                     b.Navigation("ParentArea");
                 });
 
-            modelBuilder.Entity("RaoVatWeb.Models.ChatMessage", b =>
-                {
-                    b.HasOne("RaoVatWeb.Models.Conversation", "Conversation")
-                        .WithMany("Messages")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-                });
-
             modelBuilder.Entity("RaoVatWeb.Models.ContactMessage", b =>
                 {
                     b.HasOne("RaoVatWeb.Models.Post", "Post")
                         .WithMany("ContactMessages")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("RaoVatWeb.Models.Conversation", b =>
-                {
-                    b.HasOne("RaoVatWeb.Models.Post", "Post")
-                        .WithMany("Conversations")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -647,16 +564,9 @@ namespace RaoVatWeb.Migrations
                     b.Navigation("Posts");
                 });
 
-            modelBuilder.Entity("RaoVatWeb.Models.Conversation", b =>
-                {
-                    b.Navigation("Messages");
-                });
-
             modelBuilder.Entity("RaoVatWeb.Models.Post", b =>
                 {
                     b.Navigation("ContactMessages");
-
-                    b.Navigation("Conversations");
 
                     b.Navigation("Images");
                 });

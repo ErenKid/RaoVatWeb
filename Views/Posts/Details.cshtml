@@ -28,7 +28,7 @@
 
             <hr />
 
-            @if (Model.Images != null && Model.Images.Any())
+            @if (Model.Images != null && Model.Images.Count > 0)
             {
                 <div class="row mb-3">
                     @foreach (var image in Model.Images)
@@ -72,6 +72,7 @@
             <hr />
 
             <h5>Thông tin liên hệ</h5>
+
             <p>
                 <strong>Người liên hệ:</strong>
                 @Model.ContactName
@@ -81,6 +82,61 @@
                 <strong>Số điện thoại:</strong>
                 @Model.ContactPhone
             </p>
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">
+                        @TempData["Error"]
+                    </div>
+                }
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <form asp-controller="Chats"
+                        asp-action="Start"
+                        method="post"
+                        class="mt-3">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="postId" value="@Model.PostId" />
+
+                        <button type="submit" class="btn btn-success">
+                            Nhắn tin với người đăng
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-info mt-3">
+                        Bạn cần đăng nhập để nhắn tin với người đăng.
+                    </div>
+                }
+            <hr />
+
+            <h5>Gửi liên hệ cho người đăng tin</h5>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["Success"]
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["Error"]
+                </div>
+            }
+
+            <form asp-controller="Posts"
+                  asp-action="SendContact"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="postId" value="@Model.PostId" />
+            </form>
         </div>
     </div>
 </div>

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RaoVatWeb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+97130cc6869364f5663df1def7fe120e61b2c361")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b35a1b20723a14c94aef518f5c68ce10dbbf834")]
 [assembly: System.Reflection.AssemblyProductAttribute("RaoVatWeb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RaoVatWeb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

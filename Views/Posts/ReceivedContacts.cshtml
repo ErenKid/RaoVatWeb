@@ -1,0 +1,64 @@
+@model IEnumerable<RaoVatWeb.Models.ContactMessage>
+
+@{
+    ViewData["Title"] = "Liên hệ nhận được";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Liên hệ nhận được</h2>
+
+        <a asp-controller="Posts"
+           asp-action="MyPosts"
+           class="btn btn-secondary">
+            Quay lại Tin của tôi
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Chưa có ai gửi liên hệ cho tin của bạn.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tin rao</th>
+                    <th>Người liên hệ</th>
+                    <th>Số điện thoại</th>
+                    <th>Email</th>
+                    <th>Nội dung</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @(item.Post != null ? item.Post.Title : "Tin đã bị xóa")
+                        </td>
+
+                        <td>@item.SenderName</td>
+
+                        <td>@item.SenderPhone</td>
+
+                        <td>
+                            @(string.IsNullOrWhiteSpace(item.SenderEmail) ? "Không có" : item.SenderEmail)
+                        </td>
+
+                        <td>@item.MessageContent</td>
+
+                        <td>
+                            @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
