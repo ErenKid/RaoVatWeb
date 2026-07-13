@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RaoVatWeb.Data;
 
@@ -11,9 +12,11 @@ using RaoVatWeb.Data;
 namespace RaoVatWeb.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260713101050_AddVipPaymentSystem")]
+    partial class AddVipPaymentSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -368,7 +371,7 @@ namespace RaoVatWeb.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("ContactMessage");
+                    b.ToTable("ContactMessages");
                 });
 
             modelBuilder.Entity("RaoVatWeb.Models.Conversation", b =>
@@ -499,88 +502,6 @@ namespace RaoVatWeb.Migrations
                     b.HasIndex("PostId");
 
                     b.ToTable("PostImages");
-                });
-
-            modelBuilder.Entity("RaoVatWeb.Models.VipOrder", b =>
-                {
-                    b.Property<int>("VipOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VipOrderId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("OrderCode")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime?>("VipExpiredAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("VipPackageId")
-                        .HasColumnType("int");
-
-                    b.HasKey("VipOrderId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("VipPackageId");
-
-                    b.ToTable("VipOrders");
-                });
-
-            modelBuilder.Entity("RaoVatWeb.Models.VipPackage", b =>
-                {
-                    b.Property<int>("VipPackageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VipPackageId"));
-
-                    b.Property<bool>("CanHighlightPost")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("DurationDays")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("MaxPosts")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.HasKey("VipPackageId");
-
-                    b.ToTable("VipPackages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -714,25 +635,6 @@ namespace RaoVatWeb.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("RaoVatWeb.Models.VipOrder", b =>
-                {
-                    b.HasOne("RaoVatWeb.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RaoVatWeb.Models.VipPackage", "VipPackage")
-                        .WithMany("VipOrders")
-                        .HasForeignKey("VipPackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-
-                    b.Navigation("VipPackage");
-                });
-
             modelBuilder.Entity("RaoVatWeb.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Posts");
@@ -760,11 +662,6 @@ namespace RaoVatWeb.Migrations
                     b.Navigation("Conversations");
 
                     b.Navigation("Images");
-                });
-
-            modelBuilder.Entity("RaoVatWeb.Models.VipPackage", b =>
-                {
-                    b.Navigation("VipOrders");
                 });
 #pragma warning restore 612, 618
         }

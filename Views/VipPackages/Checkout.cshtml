@@ -1,0 +1,131 @@
+@model RaoVatWeb.Models.VipOrder
+
+@{
+    ViewData["Title"] = "Thanh toán gói VIP";
+}
+
+<div class="container mt-4">
+    <h2>Thanh toán gói VIP</h2>
+
+    <div class="alert alert-warning">
+        Đây là trang thanh toán mô phỏng trong phạm vi đồ án. Sau khi xác nhận thanh toán, hệ thống sẽ tự động kích hoạt VIP.
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    Thông tin đơn hàng
+                </div>
+
+                <div class="card-body">
+                    <p>
+                        <strong>Mã đơn hàng:</strong>
+                        @Model.OrderCode
+                    </p>
+
+                    <p>
+                        <strong>Gói VIP:</strong>
+                        @Model.VipPackage?.Name
+                    </p>
+
+                    <p>
+                        <strong>Thời hạn:</strong>
+                        @Model.VipPackage?.DurationDays ngày
+                    </p>
+
+                    <p>
+                        <strong>Số tiền:</strong>
+                        <span class="text-danger fw-bold">
+                            @string.Format("{0:N0} VNĐ", Model.Amount)
+                        </span>
+                    </p>
+
+                    <p>
+                        <strong>Trạng thái:</strong>
+                        <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    Thông tin chuyển khoản mô phỏng
+                </div>
+
+                <div class="card-body">
+                    <p><strong>Ngân hàng:</strong> RaoVat Bank</p>
+                    <p><strong>Số tài khoản:</strong> 0123456789</p>
+                    <p><strong>Chủ tài khoản:</strong> RAOVAT WEB</p>
+
+                    <p>
+                        <strong>Số tiền:</strong>
+                        @string.Format("{0:N0} VNĐ", Model.Amount)
+                    </p>
+
+                    <p>
+                        <strong>Nội dung chuyển khoản:</strong>
+                        <span class="badge bg-dark">@Model.OrderCode</span>
+                    </p>
+
+                    <div class="border rounded text-center p-4 bg-light">
+                        <div style="font-size: 70px;">▦</div>
+                        <div class="fw-bold">QR THANH TOÁN MÔ PHỎNG</div>
+                        <div class="text-muted small">
+                            Quét QR hoặc chuyển khoản theo nội dung trên
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    Xác nhận giao dịch
+                </div>
+
+                <div class="card-body">
+                    <p>
+                        Sau khi thanh toán thành công, hệ thống sẽ tự động kích hoạt VIP cho tài khoản của bạn.
+                    </p>
+
+                    <form asp-controller="VipPackages"
+                          asp-action="ConfirmPayment"
+                          asp-route-id="@Model.VipOrderId"
+                          method="post"
+                          class="mb-2">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="btn btn-success w-100"
+                                onclick="return confirm('Xác nhận mô phỏng thanh toán thành công?');">
+                            Tôi đã thanh toán
+                        </button>
+                    </form>
+
+                    <form asp-controller="VipPackages"
+                          asp-action="Cancel"
+                          asp-route-id="@Model.VipOrderId"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="btn btn-outline-danger w-100"
+                                onclick="return confirm('Bạn có chắc muốn hủy đơn này không?');">
+                            Hủy đơn
+                        </button>
+                    </form>
+
+                    <a asp-controller="VipPackages"
+                       asp-action="Index"
+                       class="btn btn-secondary w-100 mt-2">
+                        Quay lại gói VIP
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

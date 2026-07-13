@@ -1,0 +1,55 @@
+@model RaoVatWeb.Models.VipOrder
+
+@{
+    ViewData["Title"] = "Thanh toán thành công";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-body text-center">
+            <div class="display-4 text-success mb-3">✓</div>
+
+            <h2>Thanh toán thành công</h2>
+
+            <p class="text-muted">
+                Gói VIP của bạn đã được kích hoạt tự động.
+            </p>
+
+            <hr />
+
+            <p>
+                <strong>Mã đơn hàng:</strong>
+                @Model.OrderCode
+            </p>
+
+            <p>
+                <strong>Gói VIP:</strong>
+                @Model.VipPackage?.Name
+            </p>
+
+            <p>
+                <strong>Số tiền:</strong>
+                @string.Format("{0:N0} VNĐ", Model.Amount)
+            </p>
+
+            <p>
+                <strong>VIP có hiệu lực đến:</strong>
+                <span class="text-danger fw-bold">
+                    @Model.VipExpiredAt?.ToString("dd/MM/yyyy HH:mm")
+                </span>
+            </p>
+
+            <a asp-controller="Posts"
+               asp-action="Create"
+               class="btn btn-primary">
+                Đăng tin VIP ngay
+            </a>
+
+            <a asp-controller="Posts"
+               asp-action="MyPosts"
+               class="btn btn-secondary">
+                Về Tin của tôi
+            </a>
+        </div>
+    </div>
+</div>

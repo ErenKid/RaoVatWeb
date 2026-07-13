@@ -15,10 +15,11 @@ namespace RaoVatWeb.Data
         public DbSet<Area> Areas { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<PostImage> PostImages { get; set; }
-
-        public DbSet<ContactMessage> ContactMessages { get; set; } = null!;
-
         public DbSet<Conversation> Conversations { get; set; } = null!;
-public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
+        public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
+
+        public DbSet<VipPackage> VipPackages { get; set; } = null!;
+
+        public DbSet<VipOrder> VipOrders { get; set; } = null!;
     }
 }

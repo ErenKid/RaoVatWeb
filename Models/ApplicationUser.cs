@@ -19,5 +19,7 @@ namespace RaoVatWeb.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public ICollection<Post> Posts { get; set; } = new List<Post>();
+        
+    
     }
 }

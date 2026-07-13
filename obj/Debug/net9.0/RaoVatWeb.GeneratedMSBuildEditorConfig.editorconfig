@@ -152,6 +152,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/fuoc1/RaoVatWeb/Views/VipPackages/Checkout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmlwUGFja2FnZXNcQ2hlY2tvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/fuoc1/RaoVatWeb/Views/VipPackages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmlwUGFja2FnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/fuoc1/RaoVatWeb/Views/VipPackages/Success.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmlwUGFja2FnZXNcU3VjY2Vzcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/fuoc1/RaoVatWeb/Views/Vip/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmlwXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

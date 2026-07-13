@@ -1,0 +1,77 @@
+@model IEnumerable<RaoVatWeb.Models.VipPackage>
+
+@{
+    ViewData["Title"] = "Gói thành viên VIP";
+    bool isVipActive = ViewBag.IsVipActive == true;
+    DateTime? vipExpiredAt = ViewBag.VipExpiredAt as DateTime?;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">Gói thành viên VIP</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (isVipActive)
+    {
+        <div class="alert alert-success">
+            Tài khoản của bạn đang là <strong>thành viên VIP</strong>.
+            Thời hạn đến: <strong>@vipExpiredAt?.ToString("dd/MM/yyyy HH:mm")</strong>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Bạn hiện là thành viên thường. Hãy chọn gói VIP để tin đăng được ưu tiên hiển thị.
+        </div>
+    }
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0">@item.Name</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <h3 class="text-danger">
+                            @string.Format("{0:N0} VNĐ", item.Price)
+                        </h3>
+
+                        <p>@item.Description</p>
+
+                        <ul>
+                            <li>Thời hạn: @item.DurationDays ngày</li>
+                            <li>Số tin tối đa: @item.MaxPosts tin</li>
+                            <li>Tin đăng được ưu tiên hiển thị</li>
+                            <li>Có nhãn Tin nổi bật</li>
+                        </ul>
+                    </div>
+
+                    <div class="card-footer">
+                        <form asp-controller="VipPackages"
+                              asp-action="Buy"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="packageId"
+                                   value="@item.VipPackageId" />
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                Chọn gói này
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

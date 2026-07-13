@@ -321,69 +321,7 @@ public async Task<IActionResult> DeleteImage(int imageId, int postId)
                 return View(post);
             }
 
-            [AllowAnonymous]
-            [HttpPost]
-            [ValidateAntiForgeryToken]
-            public async Task<IActionResult> SendContact(
-                int postId,
-                string senderName,
-                string senderPhone,
-                string? senderEmail,
-                string messageContent)
-            {
-                var post = await _context.Posts
-                    .FirstOrDefaultAsync(p =>
-                        p.PostId == postId &&
-                        p.Status == PostStatus.Approved);
-
-                if (post == null)
-                {
-                    return NotFound();
-                }
-
-                if (string.IsNullOrWhiteSpace(senderName) ||
-                    string.IsNullOrWhiteSpace(senderPhone) ||
-                    string.IsNullOrWhiteSpace(messageContent))
-                {
-                    TempData["Error"] = "Vui lòng nhập đầy đủ họ tên, số điện thoại và nội dung liên hệ.";
-                    return RedirectToAction(nameof(Details), new { id = postId });
-                }
-
-                var contact = new ContactMessage
-                {
-                    PostId = postId,
-                    SenderName = senderName.Trim(),
-                    SenderPhone = senderPhone.Trim(),
-                    SenderEmail = senderEmail?.Trim(),
-                    MessageContent = messageContent.Trim(),
-                    IsRead = false,
-                    CreatedAt = DateTime.Now
-                };
-
-                _context.ContactMessages.Add(contact);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Gửi liên hệ thành công. Người đăng tin sẽ nhận được thông tin của bạn.";
-                return RedirectToAction(nameof(Details), new { id = postId });
-            }
-
-                        public async Task<IActionResult> ReceivedContacts()
-            {
-                var currentUser = await _userManager.GetUserAsync(User);
-
-                if (currentUser == null)
-                {
-                    return Challenge();
-                }
-
-                var contacts = await _context.ContactMessages
-                    .Include(c => c.Post)
-                    .Where(c => c.Post != null && c.Post.UserId == currentUser.Id)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .ToListAsync();
-
-                return View(contacts);
-            }
+        
         public async Task<IActionResult> Create()
 {
     await LoadDropdownsAsync();
@@ -426,7 +364,9 @@ public async Task<IActionResult> Create(PostCreateViewModel model)
         ContactPhone = currentUser.PhoneNumber ?? "",
 
         Status = PostStatus.Pending,
-        IsVipPriority = false,
+        IsVipPriority = currentUser.IsVip &&
+                currentUser.VipExpiredAt.HasValue &&
+                currentUser.VipExpiredAt.Value > DateTime.Now,
         ViewCount = 0,
         CreatedAt = DateTime.Now
     };
