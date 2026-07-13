@@ -93,63 +93,53 @@ namespace RaoVatWeb.Controllers
             return View();
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+      [HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Login(LoginViewModel model)
+{
+    if (!ModelState.IsValid)
+    {
+        return View(model);
+    }
+
+    var user = await _userManager.FindByEmailAsync(model.Email);
+
+    if (user != null)
+    {
+        var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+
+        if (lockoutEnd.HasValue && lockoutEnd.Value > DateTimeOffset.UtcNow)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var user = await _userManager.FindByEmailAsync(model.Email);
-
-            if (user == null)
-            {
-                ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng");
-                return View(model);
-            }
-
-            if (user.IsLocked)
-            {
-                ModelState.AddModelError(string.Empty, "Tài khoản của bạn đang bị khóa");
-                return View(model);
-            }
-
-            var result = await _signInManager.PasswordSignInAsync(
-                user,
-                model.Password,
-                model.RememberMe,
-                lockoutOnFailure: false
-            );
-
-            if (result.Succeeded)
-            {
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                {
-                    return Redirect(returnUrl);
-                }
-
-                if (await _userManager.IsInRoleAsync(user, "Admin"))
-                {
-                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
-                }
-
-                if (await _userManager.IsInRoleAsync(user, "Vip"))
-                {
-                    return RedirectToAction("Index", "Vip");
-                }
-
-                return RedirectToAction("Index", "Member");
-            }
-
-            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng");
+            ViewBag.LockedAccount = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.";
             return View(model);
         }
+    }
 
+    var result = await _signInManager.PasswordSignInAsync(
+    model.Email,
+    model.Password,
+    model.RememberMe,
+    lockoutOnFailure: false);
+
+    if (result.Succeeded)
+    {
+        if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+        {
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+        }
+
+        return RedirectToAction("Index", "Home");
+    }
+
+    if (result.IsLockedOut)
+    {
+        ViewBag.LockedAccount = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.";
+        return View(model);
+    }
+
+    ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+    return View(model);
+}
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]

@@ -5,8 +5,17 @@
     ViewData["Title"] = "Dashboard Admin";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Dashboard quản trị</h2>
+        <div class="container mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Dashboard quản trị</h2>
+
+            <a asp-area="Admin"
+            asp-controller="Users"
+            asp-action="Index"
+            class="btn btn-outline-primary">
+                Quản lý người dùng
+            </a>
+        </div>
 
     <div class="row">
         <div class="col-md-3 mb-3">

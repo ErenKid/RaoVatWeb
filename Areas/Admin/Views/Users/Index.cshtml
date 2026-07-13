@@ -1,0 +1,117 @@
+@model IEnumerable<RaoVatWeb.ViewModels.AdminUserViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý người dùng</h2>
+
+        <a asp-area="Admin"
+           asp-controller="Dashboard"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Email</th>
+                <th>Họ tên</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò</th>
+                <th>Số tin đã đăng</th>
+                <th>Trạng thái</th>
+                <th style="width: 180px;">Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Email</td>
+
+                    <td>@item.FullName</td>
+
+                    <td>
+                        @(string.IsNullOrWhiteSpace(item.PhoneNumber) ? "Chưa có" : item.PhoneNumber)
+                    </td>
+
+                    <td>
+                        <span class="badge bg-info text-dark">
+                            @item.Roles
+                        </span>
+                    </td>
+
+                    <td>@item.PostCount</td>
+
+                    <td>
+                        @if (item.IsLocked)
+                        {
+                            <span class="badge bg-danger">Đang bị khóa</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Hoạt động</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (item.IsLocked)
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Users"
+                                  asp-action="Unlock"
+                                  asp-route-id="@item.UserId"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-success"
+                                        onclick="return confirm('Bạn có chắc muốn mở khóa tài khoản này không?');">
+                                    Mở khóa
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Users"
+                                  asp-action="Lock"
+                                  asp-route-id="@item.UserId"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bạn có chắc muốn khóa tài khoản này không?');">
+                                    Khóa
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

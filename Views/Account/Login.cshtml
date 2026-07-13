@@ -36,7 +36,50 @@
         </button>
     </form>
 </div>
+@if (ViewBag.LockedAccount != null)
+{
+    <div class="modal fade" id="lockedAccountModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Tài khoản bị khóa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
 
+                <div class="modal-body">
+                    <p class="mb-0">
+                        @ViewBag.LockedAccount
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+}
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    @if (ViewBag.LockedAccount != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var modalElement = document.getElementById("lockedAccountModal");
+
+                if (modalElement) {
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+            });
+        </script>
+    }
 }
