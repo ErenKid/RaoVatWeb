@@ -1,0 +1,156 @@
+@using RaoVatWeb.Models.Enums
+@model RaoVatWeb.Models.Post
+
+@{
+    ViewData["Title"] = "Chi tiết tin đăng";
+}
+
+<div class="container mt-4">
+    <a asp-area="Admin"
+       asp-controller="Posts"
+       asp-action="Index"
+       class="btn btn-secondary mb-3">
+        Quay lại quản lý tin
+    </a>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Chi tiết tin đăng</h3>
+        </div>
+
+        <div class="card-body">
+            <h4>@Model.Title</h4>
+
+            <p class="text-muted">
+                Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                |
+                Lượt xem: @Model.ViewCount
+            </p>
+
+            <hr />
+
+            <p>
+                <strong>Giá:</strong>
+                @string.Format("{0:N0} VNĐ", Model.Price)
+            </p>
+
+            <p>
+                <strong>Danh mục:</strong>
+                @(Model.Category != null ? Model.Category.Name : "Chưa có")
+            </p>
+
+            <p>
+                <strong>Khu vực:</strong>
+                @(Model.Area != null ? Model.Area.Name : "Chưa có")
+            </p>
+
+            <p>
+                <strong>Trạng thái:</strong>
+
+                @if (Model.Status == PostStatus.Pending)
+                {
+                    <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                }
+                else if (Model.Status == PostStatus.Approved)
+                {
+                    <span class="badge bg-success">Đã duyệt</span>
+                }
+                else if (Model.Status == PostStatus.Rejected)
+                {
+                    <span class="badge bg-danger">Bị từ chối</span>
+                }
+                else if (Model.Status == PostStatus.Hidden)
+                {
+                    <span class="badge bg-secondary">Đã ẩn</span>
+                }
+            </p>
+
+            <hr />
+
+            <h5>Mô tả tin đăng</h5>
+            <p>@Model.Description</p>
+
+            <hr />
+
+            <h5>Thông tin liên hệ</h5>
+
+            <p>
+                <strong>Người liên hệ:</strong>
+                @Model.ContactName
+            </p>
+
+            <p>
+                <strong>Số điện thoại:</strong>
+                @Model.ContactPhone
+            </p>
+
+            <hr />
+
+            <h5>Thao tác của Admin</h5>
+
+            @if (Model.Status != PostStatus.Approved)
+            {
+                <form asp-area="Admin"
+                      asp-controller="Posts"
+                      asp-action="Approve"
+                      asp-route-id="@Model.PostId"
+                      method="post"
+                      class="d-inline">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-success">
+                        Duyệt tin
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status != PostStatus.Rejected)
+            {
+                <form asp-area="Admin"
+                      asp-controller="Posts"
+                      asp-action="Reject"
+                      asp-route-id="@Model.PostId"
+                      method="post"
+                      class="d-inline">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-danger">
+                        Từ chối
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status != PostStatus.Hidden)
+            {
+                <form asp-area="Admin"
+                      asp-controller="Posts"
+                      asp-action="Hide"
+                      asp-route-id="@Model.PostId"
+                      method="post"
+                      class="d-inline">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-secondary">
+                        Ẩn tin
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status != PostStatus.Pending)
+            {
+                <form asp-area="Admin"
+                      asp-controller="Posts"
+                      asp-action="RestoreToPending"
+                      asp-route-id="@Model.PostId"
+                      method="post"
+                      class="d-inline">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-warning">
+                        Chuyển về chờ duyệt
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</div>
