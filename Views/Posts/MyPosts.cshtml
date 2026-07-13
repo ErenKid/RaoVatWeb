@@ -40,6 +40,7 @@
                     <th>Giá</th>
                     <th>Trạng thái</th>
                     <th>Ngày đăng</th>
+                    <th style="width: 260px;">Thao tác</th>
                 </tr>
             </thead>
 
@@ -49,36 +50,84 @@
                     <tr>
                         <td>@item.Title</td>
 
-                        <td>@(item.Category != null ? item.Category.Name : "Chưa có")</td>
-
-                        <td>@(item.Area != null ? item.Area.Name : "Chưa có")</td>
-
-                        <td>@string.Format("{0:N0} VNĐ", item.Price)</td>
-
                         <td>
-                          @if (item.Status == PostStatus.Pending)
-                        {
-                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
-                        }
-                        else if (item.Status == PostStatus.Approved)
-                        {
-                            <span class="badge bg-success">Đã duyệt</span>
-                        }
-                        else if (item.Status == PostStatus.Rejected)
-                        {
-                            <span class="badge bg-danger">Bị từ chối</span>
-                        }
-                        else if (item.Status == PostStatus.Hidden)
-                        {
-                            <span class="badge bg-secondary">Đã ẩn</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">@item.Status</span>
-                        }
+                            @(item.Category != null ? item.Category.Name : "Chưa có")
                         </td>
 
-                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @(item.Area != null ? item.Area.Name : "Chưa có")
+                        </td>
+
+                        <td>
+                            @string.Format("{0:N0} VNĐ", item.Price)
+                        </td>
+
+                        <td>
+                            @if (item.Status == PostStatus.Pending)
+                            {
+                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                            }
+                            else if (item.Status == PostStatus.Approved)
+                            {
+                                <span class="badge bg-success">Đã duyệt</span>
+                            }
+                            else if (item.Status == PostStatus.Rejected)
+                            {
+                                <span class="badge bg-danger">Bị từ chối</span>
+                            }
+                            else if (item.Status == PostStatus.Hidden)
+                            {
+                                <span class="badge bg-secondary">Đã ẩn</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@item.Status</span>
+                            }
+                        </td>
+
+                        <td>
+                            @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            <a asp-controller="Posts"
+                               asp-action="Edit"
+                               asp-route-id="@item.PostId"
+                               class="btn btn-sm btn-warning">
+                                Sửa
+                            </a>
+
+                            @if (item.Status != PostStatus.Hidden)
+                            {
+                                <form asp-controller="Posts"
+                                      asp-action="Hide"
+                                      asp-route-id="@item.PostId"
+                                      method="post"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-secondary"
+                                            onclick="return confirm('Bạn có chắc muốn ẩn tin này không?');">
+                                        Ẩn
+                                    </button>
+                                </form>
+                            }
+
+                            <form asp-controller="Posts"
+                                  asp-action="Delete"
+                                  asp-route-id="@item.PostId"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bạn có chắc muốn xóa tin này không?');">
+                                    Xóa
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 }
             </tbody>

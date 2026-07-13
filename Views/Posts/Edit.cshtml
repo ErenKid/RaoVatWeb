@@ -1,0 +1,84 @@
+@model RaoVatWeb.ViewModels.PostEditViewModel
+
+@{
+    ViewData["Title"] = "Sửa tin rao vặt";
+}
+
+<div class="container mt-4">
+    <h2>Sửa tin rao vặt</h2>
+
+    <div class="alert alert-warning">
+        Sau khi chỉnh sửa, tin sẽ được chuyển về trạng thái <strong>Chờ duyệt</strong> để Admin kiểm tra lại.
+    </div>
+
+    <form asp-controller="Posts"
+          asp-action="Edit"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="PostId" />
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Tiêu đề tin đăng</label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="CategoryId" class="form-label">Danh mục</label>
+            <select asp-for="CategoryId"
+                    asp-items="@(ViewBag.Categories as SelectList)"
+                    class="form-select">
+                <option value="">-- Chọn danh mục --</option>
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="AreaId" class="form-label">Khu vực</label>
+            <select asp-for="AreaId"
+                    asp-items="@(ViewBag.Areas as SelectList)"
+                    class="form-select">
+                <option value="">-- Chọn khu vực --</option>
+            </select>
+            <span asp-validation-for="AreaId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Price" class="form-label">Giá</label>
+            <input asp-for="Price"
+                   type="number"
+                   min="0"
+                   step="1000"
+                   class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Mô tả chi tiết</label>
+            <textarea asp-for="Description"
+                      class="form-control"
+                      rows="5"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Lưu thay đổi
+        </button>
+
+        <a asp-controller="Posts"
+           asp-action="MyPosts"
+           class="btn btn-secondary">
+            Quay lại Tin của tôi
+        </a>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

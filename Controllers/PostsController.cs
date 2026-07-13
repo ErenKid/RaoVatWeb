@@ -30,7 +30,79 @@ namespace RaoVatWeb.Controllers
                  ViewBag.Categories = new SelectList(categories, "CategoryId", "Name", selectedCategoryId);
                 ViewBag.Areas = new SelectList(areas, "AreaId", "Name", selectedAreaId);
             }
-        
+        public async Task<IActionResult> Edit(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.Posts
+                .FirstOrDefaultAsync(p => p.PostId == id && p.UserId == currentUser.Id);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            await LoadDropdownsAsync(post.CategoryId, post.AreaId);
+    
+            var model = new PostEditViewModel
+            {
+                PostId = post.PostId,
+                Title = post.Title,
+                Description = post.Description,
+                Price = Convert.ToDecimal(post.Price),
+                CategoryId = post.CategoryId,
+                AreaId = post.AreaId
+            };
+
+            return View(model);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(PostEditViewModel model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+            {
+                return Challenge();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await LoadDropdownsAsync(model.CategoryId, model.AreaId);
+                return View(model);
+            }
+
+            var post = await _context.Posts
+                .FirstOrDefaultAsync(p => p.PostId == model.PostId && p.UserId == currentUser.Id);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            post.Title = model.Title.Trim();
+            post.Description = model.Description.Trim();
+            post.Price = model.Price;
+            post.CategoryId = model.CategoryId;
+            post.AreaId = model.AreaId;
+
+            post.ContactName = currentUser.FullName ?? currentUser.UserName ?? "";
+            post.ContactPhone = currentUser.PhoneNumber ?? "";
+
+            post.Status = PostStatus.Pending;
+            post.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật tin thành công. Tin đã được chuyển về trạng thái chờ duyệt.";
+            return RedirectToAction(nameof(MyPosts));
+        }
         public PostsController(ApplicationDbContext context,
         UserManager<ApplicationUser> userManager)
         {
@@ -76,7 +148,58 @@ namespace RaoVatWeb.Controllers
 
                 return View(posts);
             }
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> Hide(int id)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
 
+                if (currentUser == null)
+                {
+                    return Challenge();
+                }
+
+                var post = await _context.Posts
+                    .FirstOrDefaultAsync(p => p.PostId == id && p.UserId == currentUser.Id);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                post.Status = PostStatus.Hidden;
+                post.UpdatedAt = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Đã ẩn tin thành công.";
+                return RedirectToAction(nameof(MyPosts));
+            }
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> Delete(int id)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                if (currentUser == null)
+                {
+                    return Challenge();
+                }
+
+                var post = await _context.Posts
+                    .FirstOrDefaultAsync(p => p.PostId == id && p.UserId == currentUser.Id);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Posts.Remove(post);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Đã xóa tin thành công.";
+                return RedirectToAction(nameof(MyPosts));
+            }
             [AllowAnonymous]
             public async Task<IActionResult> Details(int id)
             {
