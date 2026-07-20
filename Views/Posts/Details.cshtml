@@ -1,142 +1,703 @@
+@using System.Security.Claims
 @model RaoVatWeb.Models.Post
 
 @{
-    ViewData["Title"] = "Chi tiết tin rao vặt";
+    ViewData["Title"] = "Chi tiết tin rao";
+
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    var isOwner = User.Identity != null
+                  && User.Identity.IsAuthenticated
+                  && Model.UserId == currentUserId;
+
+    var reviews = ViewBag.Reviews as List<RaoVatWeb.Models.Review>
+        ?? new List<RaoVatWeb.Models.Review>();
+
+    double averageRating = ViewBag.AverageRating != null
+        ? Convert.ToDouble(ViewBag.AverageRating)
+        : 0;
+
+    int reviewCount = ViewBag.ReviewCount != null
+        ? Convert.ToInt32(ViewBag.ReviewCount)
+        : 0;
+
+    bool hasReviewed = ViewBag.HasReviewed == true;
+
+    var mainImage = Model.Images != null
+        ? Model.Images.OrderByDescending(x => x.IsMainImage).FirstOrDefault()
+        : null;
 }
 
-<div class="container mt-4">
+<style>
+    .detail-box {
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .detail-card {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+
+    .vip-badge {
+        background: #e83e5a;
+        color: white;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 6px;
+        display: inline-block;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .post-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .post-meta {
+        color: #4b5563;
+        font-size: 14px;
+        margin-bottom: 14px;
+    }
+
+    .post-img {
+        max-width: 100%;
+        max-height: 360px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 18px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: 18px;
+        margin-bottom: 10px;
+        color: #111827;
+    }
+
+    .review-card {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .review-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .review-subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .review-score {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        border-radius: 12px;
+        padding: 12px 18px;
+        text-align: center;
+        min-width: 130px;
+    }
+
+    .review-score-number {
+        font-size: 28px;
+        font-weight: 900;
+        color: #111827;
+    }
+
+    .review-score-label {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .review-note {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #92400e;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .review-form-box {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
+    .rating-widget {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .rating-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .rating-label {
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .rating-pill {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .star-list {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .rating-star {
+        font-size: 40px;
+        line-height: 1;
+        cursor: pointer;
+        color: #d1d5db;
+        transition: 0.15s ease;
+        user-select: none;
+    }
+
+    .rating-star:hover {
+        transform: translateY(-2px) scale(1.08);
+    }
+
+    .rating-star.active {
+        color: #f59e0b;
+        text-shadow: 0 4px 12px rgba(245, 158, 11, 0.28);
+    }
+
+    .rating-message {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .rating-error {
+        display: none;
+        margin-top: 10px;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .review-textarea {
+        width: 100%;
+        min-height: 100px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 12px;
+        resize: vertical;
+        outline: none;
+    }
+
+    .review-textarea:focus {
+        border-color: #f2b705;
+        box-shadow: 0 0 0 0.2rem rgba(255, 212, 59, 0.25);
+    }
+
+    .review-submit {
+        background: #111827;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 11px 18px;
+        font-weight: 800;
+    }
+
+    .review-submit:hover {
+        background: #000;
+    }
+
+    .review-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .review-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        background: #fff;
+    }
+
+    .review-user {
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .review-date {
+        color: #6b7280;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .review-stars {
+        color: #f59e0b;
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .review-comment {
+        color: #374151;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+
+    .review-empty {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    .report-box {
+        margin-top: 10px;
+    }
+
+    .report-toggle {
+        cursor: pointer;
+        color: #ef4444;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .report-form {
+        margin-top: 10px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .report-textarea {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .report-btn {
+        margin-top: 8px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+</style>
+
+<div class="detail-box">
     <a asp-controller="Posts"
        asp-action="Index"
        class="btn btn-secondary mb-3">
         Quay lại danh sách
     </a>
 
-    <div class="card">
-        <div class="card-body">
-            @if (Model.IsVipPriority)
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="detail-card">
+        @if (Model.IsVipPriority)
+        {
+            <div class="vip-badge">
+                Tin nổi bật
+            </div>
+        }
+
+        <div class="post-title">@Model.Title</div>
+
+        <div class="post-meta">
+            Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+            |
+            Lượt xem: @Model.ViewCount
+        </div>
+
+        <hr />
+
+        @if (mainImage != null && !string.IsNullOrWhiteSpace(mainImage.ImageUrl))
+        {
+            <img src="@mainImage.ImageUrl"
+                 alt="@Model.Title"
+                 class="post-img" />
+        }
+
+        <p>
+            <strong>Giá:</strong>
+            @Model.Price.ToString("N0") VNĐ
+        </p>
+
+        <p>
+            <strong>Danh mục:</strong>
+            @(Model.Category != null ? Model.Category.Name : "Chưa có")
+        </p>
+
+        <p>
+            <strong>Khu vực:</strong>
+            @(Model.Area != null ? Model.Area.Name : "Chưa có")
+        </p>
+
+        <hr />
+
+        <div class="section-title">
+            Mô tả chi tiết
+        </div>
+
+        <p style="white-space: pre-line;">@Model.Description</p>
+
+        <hr />
+
+        <div class="section-title">
+            Thông tin liên hệ
+        </div>
+
+        <p>
+            <strong>Người liên hệ:</strong>
+            @(string.IsNullOrWhiteSpace(Model.ContactName) ? "Chưa cập nhật" : Model.ContactName)
+        </p>
+
+        <p>
+            <strong>Số điện thoại:</strong>
+            @(string.IsNullOrWhiteSpace(Model.ContactPhone) ? "Chưa cập nhật" : Model.ContactPhone)
+        </p>
+
+        @if (!isOwner && User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <form asp-controller="Chats"
+                  asp-action="Start"
+                  asp-route-postId="@Model.PostId"
+                  method="post"
+                  asp-antiforgery="true"
+                  class="mb-2">
+                <button type="submit" class="btn btn-success">
+                    Nhắn tin với người đăng
+                </button>
+            </form>
+        }
+
+        <hr />
+
+        <div class="section-title">
+            Gửi liên hệ cho người đăng tin
+        </div>
+    </div>
+
+    <div class="review-card">
+        <div class="review-header">
+            <div>
+                <div class="review-title">
+                    Đánh giá tin đăng
+                </div>
+
+                <div class="review-subtitle">
+                    Người dùng có thể đánh giá chất lượng tin đăng và người đăng tin.
+                    Hiện có <strong>@reviewCount</strong> đánh giá.
+                </div>
+            </div>
+
+            <div class="review-score">
+                <div class="review-score-label">Điểm trung bình</div>
+                <div class="review-score-number">@averageRating.ToString("0.0")/5</div>
+            </div>
+        </div>
+
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            if (isOwner)
             {
-                <span class="badge bg-danger mb-2">Tin nổi bật</span>
-            }
-
-            <h2>@Model.Title</h2>
-
-            <p class="text-muted">
-                Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                |
-                Lượt xem: @Model.ViewCount
-            </p>
-
-            <hr />
-
-            @if (Model.Images != null && Model.Images.Count > 0)
-            {
-                <div class="row mb-3">
-                    @foreach (var image in Model.Images)
-                    {
-                        <div class="col-md-4 mb-3">
-                            <img src="@image.ImageUrl"
-                                 class="img-fluid rounded border"
-                                 style="height: 250px; width: 100%; object-fit: cover;"
-                                 alt="@Model.Title" />
-                        </div>
-                    }
+                <div class="review-note">
+                    Đây là tin đăng của bạn nên bạn không thể tự đánh giá tin này.
+                    Nếu thấy bình luận không phù hợp, bạn có thể báo cáo để Admin xử lý.
                 </div>
             }
             else
             {
-                <div class="alert alert-light">
-                    Tin này chưa có hình ảnh.
-                </div>
-            }
-
-            <p>
-                <strong>Giá:</strong>
-                @string.Format("{0:N0} VNĐ", Model.Price)
-            </p>
-
-            <p>
-                <strong>Danh mục:</strong>
-                @(Model.Category != null ? Model.Category.Name : "Chưa có")
-            </p>
-
-            <p>
-                <strong>Khu vực:</strong>
-                @(Model.Area != null ? Model.Area.Name : "Chưa có")
-            </p>
-
-            <hr />
-
-            <h5>Mô tả chi tiết</h5>
-            <p>@Model.Description</p>
-
-            <hr />
-
-            <h5>Thông tin liên hệ</h5>
-
-            <p>
-                <strong>Người liên hệ:</strong>
-                @Model.ContactName
-            </p>
-
-            <p>
-                <strong>Số điện thoại:</strong>
-                @Model.ContactPhone
-            </p>
-                @if (TempData["Error"] != null)
+                if (hasReviewed)
                 {
-                    <div class="alert alert-danger">
-                        @TempData["Error"]
+                    <div class="review-note">
+                        Bạn đã đánh giá tin này. Nếu gửi lại, hệ thống sẽ cập nhật đánh giá cũ của bạn.
                     </div>
                 }
 
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                {
-                    <form asp-controller="Chats"
-                        asp-action="Start"
-                        method="post"
-                        class="mt-3">
+                <div class="review-form-box">
+                    <form asp-controller="Reviews"
+                          asp-action="Create"
+                          method="post"
+                          asp-antiforgery="true"
+                          id="reviewForm">
 
-                        @Html.AntiForgeryToken()
+                        <input type="hidden"
+                               name="postId"
+                               value="@Model.PostId" />
 
-                        <input type="hidden" name="postId" value="@Model.PostId" />
+                        <input type="hidden"
+                               name="rating"
+                               id="ratingValue"
+                               value="0" />
 
-                        <button type="submit" class="btn btn-success">
-                            Nhắn tin với người đăng
+                        <div class="rating-widget">
+                            <div class="rating-top">
+                                <div class="rating-label">
+                                    Chọn mức đánh giá
+                                </div>
+
+                                <div class="rating-pill" id="ratingPill">
+                                    Chưa chọn
+                                </div>
+                            </div>
+
+                            <div class="star-list">
+                                <span class="rating-star" data-value="1">★</span>
+                                <span class="rating-star" data-value="2">★</span>
+                                <span class="rating-star" data-value="3">★</span>
+                                <span class="rating-star" data-value="4">★</span>
+                                <span class="rating-star" data-value="5">★</span>
+                            </div>
+
+                            <div class="rating-message" id="ratingText">
+                                Bấm vào số sao để đánh giá mức độ hài lòng của bạn.
+                            </div>
+
+                            <div class="rating-error" id="ratingError">
+                                Vui lòng chọn số sao trước khi gửi đánh giá.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Nhận xét
+                            </label>
+
+                            <textarea name="comment"
+                                      class="review-textarea"
+                                      placeholder="Nhập nhận xét của bạn về tin đăng hoặc người đăng..."
+                                      required></textarea>
+                        </div>
+
+                        <button type="submit" class="review-submit">
+                            Gửi đánh giá
                         </button>
                     </form>
-                }
-                else
+                </div>
+            }
+        }
+        else
+        {
+            <div class="review-note">
+                Vui lòng đăng nhập để đánh giá tin đăng này.
+            </div>
+        }
+
+        @if (!reviews.Any())
+        {
+            <div class="review-empty">
+                Tin đăng này chưa có đánh giá nào.
+            </div>
+        }
+        else
+        {
+            <div class="review-list">
+                @foreach (var review in reviews)
                 {
-                    <div class="alert alert-info mt-3">
-                        Bạn cần đăng nhập để nhắn tin với người đăng.
+                    <div class="review-item">
+                        <div class="review-user">
+                            @(review.User != null && !string.IsNullOrWhiteSpace(review.User.FullName)
+                                ? review.User.FullName
+                                : "Người dùng")
+                        </div>
+
+                        <div class="review-date">
+                            @review.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+
+                        <div class="review-stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= review.Rating)
+                                {
+                                    <span>★</span>
+                                }
+                                else
+                                {
+                                    <span>☆</span>
+                                }
+                            }
+                        </div>
+
+                        <div class="review-comment">
+                            @review.Comment
+                        </div>
+
+                        @if (User.Identity != null
+                             && User.Identity.IsAuthenticated
+                             && review.UserId != currentUserId)
+                        {
+                            <div class="report-box">
+                                <details>
+                                    <summary class="report-toggle">
+                                        Báo cáo đánh giá này
+                                    </summary>
+
+                                    <form asp-controller="ReviewReports"
+                                          asp-action="Create"
+                                          method="post"
+                                          asp-antiforgery="true"
+                                          class="report-form">
+
+                                        <input type="hidden"
+                                               name="reviewId"
+                                               value="@review.ReviewId" />
+
+                                        <textarea name="reason"
+                                                  rows="3"
+                                                  class="report-textarea"
+                                                  placeholder="Nhập lý do báo cáo: phản cảm, sai sự thật, spam..."
+                                                  required></textarea>
+
+                                        <button type="submit"
+                                                class="report-btn"
+                                                onclick="return confirm('Gửi báo cáo đánh giá này đến Admin?');">
+                                            Gửi báo cáo
+                                        </button>
+                                    </form>
+                                </details>
+                            </div>
+                        }
                     </div>
                 }
-            <hr />
-
-            <h5>Gửi liên hệ cho người đăng tin</h5>
-
-            @if (TempData["Success"] != null)
-            {
-                <div class="alert alert-success">
-                    @TempData["Success"]
-                </div>
-            }
-
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger">
-                    @TempData["Error"]
-                </div>
-            }
-
-            <form asp-controller="Posts"
-                  asp-action="SendContact"
-                  method="post">
-
-                @Html.AntiForgeryToken()
-
-                <input type="hidden" name="postId" value="@Model.PostId" />
-            </form>
-        </div>
+            </div>
+        }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const stars = document.querySelectorAll(".rating-star");
+        const ratingValue = document.getElementById("ratingValue");
+        const ratingText = document.getElementById("ratingText");
+        const ratingPill = document.getElementById("ratingPill");
+        const ratingError = document.getElementById("ratingError");
+        const reviewForm = document.getElementById("reviewForm");
+
+        let selectedRating = 0;
+
+        const ratingLabels = {
+            1: "1 sao - Kém",
+            2: "2 sao - Chưa tốt",
+            3: "3 sao - Bình thường",
+            4: "4 sao - Tốt",
+            5: "5 sao - Rất tốt"
+        };
+
+        function paintStars(value) {
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute("data-value"));
+
+                if (starValue <= value) {
+                    star.classList.add("active");
+                } else {
+                    star.classList.remove("active");
+                }
+            });
+        }
+
+        if (stars.length > 0 && ratingValue && ratingText && ratingPill) {
+            stars.forEach(star => {
+                star.addEventListener("mouseenter", function () {
+                    const value = parseInt(this.getAttribute("data-value"));
+                    paintStars(value);
+                });
+
+                star.addEventListener("mouseleave", function () {
+                    paintStars(selectedRating);
+                });
+
+                star.addEventListener("click", function () {
+                    selectedRating = parseInt(this.getAttribute("data-value"));
+
+                    ratingValue.value = selectedRating;
+                    ratingText.innerHTML = "Bạn đang chọn <strong>" + ratingLabels[selectedRating] + "</strong>.";
+                    ratingPill.textContent = selectedRating + "/5";
+
+                    if (ratingError) {
+                        ratingError.style.display = "none";
+                    }
+
+                    paintStars(selectedRating);
+                });
+            });
+        }
+
+        if (reviewForm) {
+            reviewForm.addEventListener("submit", function (e) {
+                if (!ratingValue || ratingValue.value === "0") {
+                    e.preventDefault();
+
+                    if (ratingError) {
+                        ratingError.style.display = "block";
+                    }
+
+                    paintStars(0);
+                }
+            });
+        }
+    </script>
+}

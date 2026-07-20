@@ -300,27 +300,43 @@ public async Task<IActionResult> DeleteImage(int imageId, int postId)
     return RedirectToAction(nameof(Edit), new { id = postId });
 }
             [AllowAnonymous]
-            public async Task<IActionResult> Details(int id)
-            {
-                var post = await _context.Posts
-                    .Include(p => p.Category)
-                    .Include(p => p.Area)
-                    .Include(p => p.Images)
-                    .FirstOrDefaultAsync(p =>
-                        p.PostId == id &&
-                        p.Status == PostStatus.Approved);
+public async Task<IActionResult> Details(int id)
+{
+    var post = await _context.Posts
+        .Include(p => p.Category)
+        .Include(p => p.Area)
+        .Include(p => p.Images)
+        .FirstOrDefaultAsync(p =>
+            p.PostId == id &&
+            p.Status == PostStatus.Approved);
 
-                if (post == null)
-                {
-                    return NotFound();
-                }
+    if (post == null)
+    {
+        return NotFound();
+    }
 
-                post.ViewCount += 1;
-                await _context.SaveChangesAsync();
+    post.ViewCount += 1;
+    await _context.SaveChangesAsync();
 
-                return View(post);
-            }
+    var reviews = await _context.Reviews
+        .Include(r => r.User)
+        .Where(r => r.PostId == id && !r.IsHidden)
+        .OrderByDescending(r => r.CreatedAt)
+        .ToListAsync();
 
+    ViewBag.Reviews = reviews;
+    ViewBag.ReviewCount = reviews.Count;
+    ViewBag.AverageRating = reviews.Any()
+        ? reviews.Average(r => r.Rating)
+        : 0;
+
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    ViewBag.HasReviewed = !string.IsNullOrEmpty(currentUserId)
+                          && reviews.Any(r => r.UserId == currentUserId);
+
+    return View(post);
+}
         
         public async Task<IActionResult> Create()
 {

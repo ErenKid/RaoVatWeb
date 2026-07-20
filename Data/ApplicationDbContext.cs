@@ -21,5 +21,9 @@ namespace RaoVatWeb.Data
         public DbSet<VipPackage> VipPackages { get; set; } = null!;
 
         public DbSet<VipOrder> VipOrders { get; set; } = null!;
+
+        public DbSet<Review> Reviews { get; set; } = null!;
+
+        public DbSet<ReviewReport> ReviewReports { get; set; } = null!;
     }
 }

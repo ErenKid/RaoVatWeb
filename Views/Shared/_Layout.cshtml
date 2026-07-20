@@ -1,67 +1,343 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Identity
+@using RaoVatWeb.Models
+
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - RaoVatWeb</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RaoVatWeb.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111827;
+        }
+
+        .rv-navbar {
+            background: #ffd43b;
+            border-bottom: 1px solid #f2b705;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        }
+
+        .rv-brand {
+            font-weight: 950;
+            color: #111827 !important;
+            font-size: 22px;
+            letter-spacing: -0.3px;
+        }
+
+        .rv-brand-badge {
+            display: inline-flex;
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: #111827;
+            color: #ffd43b;
+            align-items: center;
+            justify-content: center;
+            font-weight: 950;
+            margin-right: 8px;
+        }
+
+        .rv-nav-link {
+            color: #111827 !important;
+            font-weight: 750;
+            border-radius: 999px;
+            padding: 9px 13px !important;
+            margin: 0 2px;
+        }
+
+        .rv-nav-link:hover {
+            background: rgba(255,255,255,0.65);
+        }
+
+        .rv-post-btn {
+            background: #111827;
+            color: white !important;
+            border-radius: 999px;
+            padding: 9px 16px !important;
+            font-weight: 900;
+        }
+
+        .rv-post-btn:hover {
+            background: #000;
+            color: white !important;
+        }
+
+        .rv-logout-btn {
+            border: none;
+            background: transparent;
+            color: #111827;
+            font-weight: 750;
+            border-radius: 999px;
+            padding: 9px 13px;
+        }
+
+        .rv-logout-btn:hover {
+            background: rgba(255,255,255,0.65);
+        }
+
+        .rv-main {
+            min-height: calc(100vh - 130px);
+            padding-top: 24px;
+            padding-bottom: 40px;
+        }
+
+        .rv-footer {
+            background: #111827;
+            color: #d1d5db;
+            padding: 22px 0;
+            font-size: 14px;
+        }
+
+        .rv-footer strong {
+            color: #ffd43b;
+        }
+
+        @@media (max-width: 991.98px) {
+            .rv-nav-link,
+            .rv-post-btn,
+            .rv-logout-btn {
+                margin-top: 6px;
+                display: inline-block;
+            }
+        }
+    </style>
 </head>
+
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RaoVatWeb</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-lg rv-navbar">
+            <div class="container">
+                <a class="navbar-brand rv-brand"
+                   asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index">
+                    <span class="rv-brand-badge">RV</span>
+                    RaoVatWeb
+                </a>
+
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                            asp-controller="VipPackages"
-                            asp-action="Index">
-                                Gói VIP
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-controller="Posts"
-                               asp-action="Index">
-                                Tin rao vặt
-                            </a>
-                        </li>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="Dashboard"
+                                   asp-action="Index">
+                                    Dashboard
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="Posts"
+                                   asp-action="Index">
+                                    Duyệt tin
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="Users"
+                                   asp-action="Index">
+                                    Người dùng
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="Categories"
+                                   asp-action="Index">
+                                    Danh mục
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="Areas"
+                                   asp-action="Index">
+                                    Khu vực
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="VipPackages"
+                                   asp-action="Index">
+                                    Gói VIP
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area="Admin"
+                                   asp-controller="VipOrders"
+                                   asp-action="Index">
+                                    Đơn VIP
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area=""
+                                   asp-controller="Home"
+                                   asp-action="Index">
+                                    Trang chủ
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area=""
+                                   asp-controller="Posts"
+                                   asp-action="Index">
+                                    Tin rao
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area=""
+                                   asp-controller="VipPackages"
+                                   asp-action="Index">
+                                    Gói VIP
+                                </a>
+                            </li>
+
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link rv-nav-link"
+                                       asp-area=""
+                                       asp-controller="Posts"
+                                       asp-action="MyPosts">
+                                        Tin của tôi
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link rv-nav-link"
+                                       asp-area=""
+                                       asp-controller="Chats"
+                                       asp-action="Index">
+                                        Tin nhắn
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link rv-nav-link"
+                                       asp-area=""
+                                       asp-controller="VipPackages"
+                                       asp-action="MyOrders">
+                                        Lịch sử VIP
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link rv-post-btn"
+                                       asp-area=""
+                                       asp-controller="Posts"
+                                       asp-action="Create">
+                                        + Đăng tin
+                                    </a>
+                                </li>
+                            }
+                        }
                     </ul>
-                    <partial name="_LoginPartial" />
+
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <form asp-area=""
+                                      asp-controller="Account"
+                                      asp-action="Logout"
+                                      method="post"
+                                      class="d-inline">
+                                    <button type="submit" class="rv-logout-btn">
+                                        Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
+                                   asp-area=""
+                                   asp-controller="Account"
+                                   asp-action="Login">
+                                    Đăng nhập
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-post-btn"
+                                   asp-area=""
+                                   asp-controller="Account"
+                                   asp-action="Register">
+                                    Đăng ký
+                                </a>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-    
-    <footer class="border-top footer text-muted">
+
+    <main class="rv-main">
         <div class="container">
-            &copy; 2026 - RaoVatWeb - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="rv-footer">
+        <div class="container d-flex justify-content-between flex-wrap gap-2">
+            <div>
+                <strong>RaoVatWeb</strong> - Hệ thống mua bán/rao vặt trực tuyến
+            </div>
+
+            <div>
+                Đồ án tốt nghiệp - ASP.NET Core MVC + MySQL
+            </div>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
