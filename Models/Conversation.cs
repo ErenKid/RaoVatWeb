@@ -13,8 +13,14 @@ namespace RaoVatWeb.Models
         [Required]
         public string BuyerId { get; set; } = string.Empty;
 
+        public ApplicationUser? Buyer { get; set; }
+
         [Required]
         public string SellerId { get; set; } = string.Empty;
+
+        public ApplicationUser? Seller { get; set; }
+
+        public string? LastMessage { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

@@ -1,62 +1,332 @@
 @model RaoVatWeb.ViewModels.RegisterViewModel
 
 @{
-    ViewData["Title"] = "Đăng ký tài khoản";
+    ViewData["Title"] = "Đăng ký";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm mt-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Đăng ký tài khoản</h4>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .auth-wrapper {
+        max-width: 1240px;
+        margin: 26px auto 40px;
+        padding: 0 16px;
+    }
+
+    .auth-grid {
+        display: grid;
+        grid-template-columns: 1.08fr 1fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .auth-left {
+        background: linear-gradient(135deg, #081225, #020817);
+        color: #fff;
+        border-radius: 28px;
+        padding: 34px 28px;
+        min-height: 620px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .auth-left::after {
+        content: "";
+        position: absolute;
+        right: -40px;
+        bottom: -40px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: rgba(255, 193, 7, 0.18);
+    }
+
+    .brand-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        padding: 10px 16px;
+        width: fit-content;
+    }
+
+    .brand-badge {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #f7c62f;
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .brand-name {
+        font-size: 20px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .auth-left h1 {
+        margin-top: 24px;
+        font-size: 56px;
+        line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 18px;
+    }
+
+    .auth-left p {
+        font-size: 18px;
+        line-height: 1.75;
+        color: rgba(255,255,255,0.88);
+        max-width: 92%;
+        margin-bottom: 0;
+    }
+
+    .feature-list {
+        margin-top: 30px;
+        display: grid;
+        gap: 12px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.10);
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .feature-icon {
+        font-size: 20px;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .auth-right {
+        background: #fff;
+        border-radius: 28px;
+        padding: 34px 28px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+        min-height: 620px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .auth-title {
+        font-size: 52px;
+        line-height: 1.18;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    .auth-subtitle {
+        font-size: 18px;
+        color: #6b7280;
+        margin-bottom: 28px;
+        line-height: 1.7;
+    }
+
+    .form-label.custom-label {
+        font-weight: 700;
+        font-size: 18px;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .custom-input {
+        height: 56px;
+        border-radius: 16px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        padding: 0 16px;
+        font-size: 17px;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input:focus {
+        border-color: #f0c419;
+        box-shadow: 0 0 0 0.22rem rgba(240,196,25,0.18);
+        background: #fff;
+    }
+
+    .btn-auth {
+        width: 100%;
+        height: 58px;
+        border: none;
+        border-radius: 18px;
+        background: #081225;
+        color: #fff;
+        font-size: 20px;
+        font-weight: 800;
+        margin-top: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-auth:hover {
+        background: #0b1730;
+        color: #fff;
+    }
+
+    .auth-switch {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 17px;
+        color: #6b7280;
+    }
+
+    .auth-switch a {
+        color: #081225;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .auth-switch a:hover {
+        color: #d39b00;
+    }
+
+    .text-danger {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .validation-summary-errors,
+    .validation-summary-valid {
+        margin-bottom: 16px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .auth-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .auth-left,
+        .auth-right {
+            min-height: auto;
+        }
+
+        .auth-left h1 {
+            font-size: 40px;
+        }
+
+        .auth-title {
+            font-size: 38px;
+        }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-grid">
+        <div class="auth-left">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-badge">RV</div>
+                    <div class="brand-name">RaoVatWeb</div>
+                </div>
+
+                <h1>Tạo tài khoản để bắt đầu đăng tin rao vặt</h1>
+
+                <p>
+                    Sau khi đăng ký, bạn có thể đăng tin mua bán, trao đổi, cho thuê,
+                    tư vấn dịch vụ và việc làm. Tin đăng sẽ được gửi cho Admin duyệt
+                    trước khi hiển thị công khai.
+                </p>
             </div>
 
-            <div class="card-body">
-                <form asp-controller="Account" asp-action="Register" method="post">
-                    @Html.AntiForgeryToken()
+            <div class="feature-list">
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Đăng tin và quản lý tin cá nhân</span>
+                </div>
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Theo dõi trạng thái tin đăng</span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="FullName" class="form-label">Họ tên</label>
-                        <input asp-for="FullName" class="form-control" />
-                        <span asp-validation-for="FullName" class="text-danger"></span>
-                    </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Đánh giá tin đăng và người đăng</span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Có thể nâng cấp VIP khi cần nổi bật hơn</span>
+                </div>
+            </div>
+        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
-                        <input asp-for="PhoneNumber" class="form-control" />
-                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                    </div>
+        <div class="auth-right">
+            <div class="auth-title">Đăng ký tài khoản</div>
+            <div class="auth-subtitle">
+                Điền thông tin cơ bản để tạo tài khoản thành viên trên hệ thống.
+            </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label">Mật khẩu</label>
-                        <input asp-for="Password" class="form-control" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
+            <form asp-controller="Account"
+                  asp-action="Register"
+                  method="post">
 
-                    <div class="mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label">Nhập lại mật khẩu</label>
-                        <input asp-for="ConfirmPassword" class="form-control" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
+                @Html.AntiForgeryToken()
 
-                    <button type="submit" class="btn btn-primary w-100">
-                        Đăng ký
-                    </button>
-                </form>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                <div class="text-center mt-3">
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label custom-label">Họ và tên</label>
+                    <input asp-for="FullName" class="form-control custom-input" placeholder="Nhập họ và tên" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label custom-label">Email</label>
+                    <input asp-for="Email" class="form-control custom-input" placeholder="Nhập email đăng ký" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label custom-label">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control custom-input" placeholder="Nhập số điện thoại liên hệ" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label custom-label">Mật khẩu</label>
+                    <input asp-for="Password" type="password" class="form-control custom-input" placeholder="Nhập mật khẩu" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label custom-label">Xác nhận mật khẩu</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control custom-input" placeholder="Nhập lại mật khẩu" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn-auth">Tạo tài khoản</button>
+
+                <div class="auth-switch">
                     Đã có tài khoản?
                     <a asp-controller="Account" asp-action="Login">Đăng nhập</a>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>

@@ -1,77 +1,664 @@
 @model IEnumerable<RaoVatWeb.Models.VipPackage>
 
 @{
-    ViewData["Title"] = "Gói thành viên VIP";
-    bool isVipActive = ViewBag.IsVipActive == true;
-    DateTime? vipExpiredAt = ViewBag.VipExpiredAt as DateTime?;
+    ViewData["Title"] = "Gói VIP";
+
+    var packages = Model != null
+        ? Model.ToList()
+        : new List<RaoVatWeb.Models.VipPackage>();
 }
 
-<div class="container mt-4">
-    <h2 class="mb-3">Gói thành viên VIP</h2>
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    @if (isVipActive)
-    {
-        <div class="alert alert-success">
-            Tài khoản của bạn đang là <strong>thành viên VIP</strong>.
-            Thời hạn đến: <strong>@vipExpiredAt?.ToString("dd/MM/yyyy HH:mm")</strong>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            Bạn hiện là thành viên thường. Hãy chọn gói VIP để tin đăng được ưu tiên hiển thị.
-        </div>
+    .vip-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding-bottom: 56px;
     }
 
-    <div class="row">
-        @foreach (var item in Model)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-warning">
-                        <h4 class="mb-0">@item.Name</h4>
+    .vip-hero {
+        background:
+            radial-gradient(circle at 15% 20%, rgba(255,255,255,0.35), transparent 22%),
+            radial-gradient(circle at 85% 12%, rgba(255,255,255,0.25), transparent 18%),
+            linear-gradient(135deg, #111827, #020617);
+        color: white;
+        padding: 70px 0 110px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .vip-hero::after {
+        content: "";
+        position: absolute;
+        right: 8%;
+        bottom: -90px;
+        width: 270px;
+        height: 270px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .vip-container {
+        max-width: 1280px;
+        width: 94vw;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .vip-hero-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 42px;
+        align-items: center;
+    }
+
+    .vip-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.35);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 800;
+        margin-bottom: 18px;
+    }
+
+    .vip-title {
+        font-size: 54px;
+        line-height: 1.12;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        margin-bottom: 18px;
+    }
+
+    .vip-title span {
+        color: #ffd43b;
+    }
+
+    .vip-subtitle {
+        color: #d1d5db;
+        font-size: 19px;
+        line-height: 1.75;
+        max-width: 720px;
+        margin-bottom: 28px;
+    }
+
+    .vip-benefit-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .vip-benefit {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        color: #f9fafb;
+        border-radius: 999px;
+        padding: 10px 15px;
+        font-size: 15px;
+        font-weight: 750;
+    }
+
+    .vip-preview-card {
+        background: white;
+        border-radius: 32px;
+        padding: 24px;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.28);
+        color: #111827;
+        transform: rotate(2deg);
+    }
+
+    .preview-top {
+        height: 210px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #ffd43b, #f59e0b);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+    .preview-top::before {
+        content: "";
+        position: absolute;
+        left: 30px;
+        top: 34px;
+        width: 120px;
+        height: 120px;
+        border-radius: 32px;
+        background: rgba(255,255,255,0.32);
+        transform: rotate(-14deg);
+    }
+
+    .preview-tag {
+        position: absolute;
+        left: 18px;
+        top: 18px;
+        background: #ef4444;
+        color: white;
+        border-radius: 999px;
+        padding: 8px 13px;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .preview-date {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        background: rgba(17,24,39,0.88);
+        color: white;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .preview-title {
+        font-size: 22px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .preview-price {
+        color: #ef4444;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+
+    .preview-meta {
+        color: #6b7280;
+        display: grid;
+        gap: 5px;
+        font-weight: 650;
+    }
+
+    .vip-packages-wrap {
+        margin-top: -62px;
+    }
+
+    .vip-section-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 34px;
+        padding: 30px;
+        box-shadow: 0 22px 54px rgba(15,23,42,0.14);
+    }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-end;
+        margin-bottom: 26px;
+    }
+
+    .section-title {
+        font-size: 34px;
+        font-weight: 900;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .section-subtitle {
+        color: #6b7280;
+        font-size: 17px;
+        line-height: 1.6;
+        max-width: 760px;
+    }
+
+    .package-count {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .package-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+    }
+
+    .package-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 28px;
+        padding: 26px;
+        background: #fff;
+        position: relative;
+        overflow: hidden;
+        transition: 0.18s ease;
+        min-height: 430px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .package-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 22px 48px rgba(15,23,42,0.13);
+        border-color: #facc15;
+    }
+
+    .package-card.featured {
+        background: linear-gradient(180deg, #fffbea, #ffffff);
+        border: 2px solid #facc15;
+    }
+
+    .featured-ribbon {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        background: #ef4444;
+        color: white;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .package-icon {
+        width: 62px;
+        height: 62px;
+        border-radius: 20px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        margin-bottom: 18px;
+    }
+
+    .package-name {
+        font-size: 28px;
+        font-weight: 900;
+        color: #111827;
+        margin-bottom: 8px;
+        padding-right: 80px;
+    }
+
+    .package-desc {
+        color: #6b7280;
+        font-size: 15px;
+        line-height: 1.65;
+        min-height: 76px;
+        margin-bottom: 18px;
+    }
+
+    .package-price {
+        color: #ef4444;
+        font-size: 38px;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 4px;
+    }
+
+    .package-duration {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 750;
+        margin-bottom: 20px;
+    }
+
+    .benefit-list {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex: 1;
+    }
+
+    .benefit-item {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        color: #374151;
+        font-size: 15px;
+        font-weight: 650;
+        line-height: 1.45;
+    }
+
+    .check-icon {
+        width: 23px;
+        height: 23px;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #047857;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 900;
+        flex-shrink: 0;
+    }
+
+    .buy-btn {
+        height: 54px;
+        border-radius: 18px;
+        background: #111827;
+        color: white;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 900;
+        width: 100%;
+    }
+
+    .buy-btn:hover {
+        background: #000;
+        color: white;
+    }
+
+    .buy-btn.featured-btn {
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+    }
+
+    .buy-btn.featured-btn:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 24px;
+        padding: 44px 24px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 17px;
+        font-weight: 750;
+    }
+
+    .how-it-works {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .step-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+    }
+
+    .step-number {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: #ffd43b;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+
+    .step-title {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .step-text {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.55;
+        font-weight: 600;
+    }
+
+    @@media (max-width: 1100px) {
+        .vip-hero-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .package-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .how-it-works {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .vip-title {
+            font-size: 44px;
+        }
+
+        .vip-preview-card {
+            transform: none;
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .package-grid,
+        .how-it-works {
+            grid-template-columns: 1fr;
+        }
+
+        .section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .vip-title {
+            font-size: 34px;
+        }
+
+        .vip-hero {
+            padding-top: 46px;
+        }
+
+        .vip-section-card {
+            padding: 22px;
+        }
+    }
+</style>
+
+<div class="vip-page">
+    <section class="vip-hero">
+        <div class="vip-container">
+            <div class="vip-hero-grid">
+                <div>
+                    <div class="vip-badge">
+                        ⚡ Thành viên VIP RaoVatWeb
                     </div>
 
-                    <div class="card-body">
-                        <h3 class="text-danger">
-                            @string.Format("{0:N0} VNĐ", item.Price)
-                        </h3>
-
-                        <p>@item.Description</p>
-
-                        <ul>
-                            <li>Thời hạn: @item.DurationDays ngày</li>
-                            <li>Số tin tối đa: @item.MaxPosts tin</li>
-                            <li>Tin đăng được ưu tiên hiển thị</li>
-                            <li>Có nhãn Tin nổi bật</li>
-                        </ul>
+                    <div class="vip-title">
+                        Đẩy tin lên nổi bật, <span>tiếp cận nhiều người xem hơn</span>
                     </div>
 
-                    <div class="card-footer">
-                        <form asp-controller="VipPackages"
-                              asp-action="Buy"
-                              method="post">
+                    <div class="vip-subtitle">
+                        Gói VIP giúp tin đăng của bạn được ưu tiên hiển thị trên trang chủ,
+                        nổi bật trong danh sách tin rao và tăng cơ hội nhận liên hệ từ người mua.
+                    </div>
 
-                            @Html.AntiForgeryToken()
+                    <div class="vip-benefit-row">
+                        <div class="vip-benefit">Ưu tiên hiển thị</div>
+                        <div class="vip-benefit">Gắn nhãn VIP</div>
+                        <div class="vip-benefit">Tăng độ tin cậy</div>
+                        <div class="vip-benefit">Phù hợp demo đồ án</div>
+                    </div>
+                </div>
 
-                            <input type="hidden"
-                                   name="packageId"
-                                   value="@item.VipPackageId" />
+                <div class="vip-preview-card">
+                    <div class="preview-top">
+                        <div class="preview-tag">VIP nổi bật</div>
+                        <div class="preview-date">Hôm nay</div>
+                    </div>
 
-                            <button type="submit" class="btn btn-primary w-100">
-                                Chọn gói này
-                            </button>
-                        </form>
+                    <div class="preview-title">
+                        Tin bán laptop gaming còn bảo hành
+                    </div>
+
+                    <div class="preview-price">
+                        12.500.000 đ
+                    </div>
+
+                    <div class="preview-meta">
+                        <div>📍 TP. Hồ Chí Minh</div>
+                        <div>📂 Điện tử - Công nghệ</div>
+                        <div>👁 Hiển thị ưu tiên trên trang chủ</div>
                     </div>
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    </section>
+
+    <section class="vip-packages-wrap">
+        <div class="vip-container">
+            <div class="vip-section-card">
+                <div class="section-head">
+                    <div>
+                        <div class="section-title">
+                            Chọn gói VIP phù hợp
+                        </div>
+
+                        <div class="section-subtitle">
+                            Mỗi gói có thời hạn sử dụng khác nhau. Sau khi thanh toán mô phỏng thành công,
+                            tài khoản được kích hoạt VIP và các tin phù hợp sẽ được ưu tiên.
+                        </div>
+                    </div>
+
+                    <div class="package-count">
+                        @packages.Count gói đang mở
+                    </div>
+                </div>
+
+                @if (!packages.Any())
+                {
+                    <div class="empty-box">
+                        Hiện chưa có gói VIP nào. Admin cần tạo gói VIP trong trang quản trị.
+                    </div>
+                }
+                else
+                {
+                    <div class="package-grid">
+                        @for (int i = 0; i < packages.Count; i++)
+                        {
+                            var item = packages[i];
+                            var isFeatured = i == 1 || packages.Count == 1;
+
+                            <div class="package-card @(isFeatured ? "featured" : "")">
+                                @if (isFeatured)
+                                {
+                                    <div class="featured-ribbon">
+                                        Phổ biến
+                                    </div>
+                                }
+
+                                <div class="package-icon">
+                                    👑
+                                </div>
+
+                                <div class="package-name">
+                                    @item.Name
+                                </div>
+
+                                <div class="package-desc">
+                                    @(string.IsNullOrWhiteSpace(item.Description)
+                                        ? "Gói VIP giúp tin đăng được ưu tiên hiển thị và nổi bật hơn trong hệ thống."
+                                        : item.Description)
+                                </div>
+
+                                <div class="package-price">
+                                    @item.Price.ToString("N0") đ
+                                </div>
+
+                                <div class="package-duration">
+                                    Thời hạn @item.DurationDays ngày
+                                </div>
+
+                                <div class="benefit-list">
+                                    <div class="benefit-item">
+                                        <span class="check-icon">✓</span>
+                                        <span>Tài khoản được kích hoạt trạng thái VIP.</span>
+                                    </div>
+
+                                    <div class="benefit-item">
+                                        <span class="check-icon">✓</span>
+                                        <span>Tin đăng được gắn nhãn VIP nổi bật.</span>
+                                    </div>
+
+                                    <div class="benefit-item">
+                                        <span class="check-icon">✓</span>
+                                        <span>Ưu tiên hiển thị trên trang chủ và danh sách tin rao.</span>
+                                    </div>
+
+                                    <div class="benefit-item">
+                                        <span class="check-icon">✓</span>
+                                        <span>Có thể gia hạn khi gói VIP gần hết hạn.</span>
+                                    </div>
+                                </div>
+
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                                    <a asp-controller="VipPackages"
+                                       asp-action="Checkout"
+                                       asp-route-id="@item.VipPackageId"
+                                       class="buy-btn @(isFeatured ? "featured-btn" : "")">
+                                        Chọn gói này
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Account"
+                                       asp-action="Login"
+                                       class="buy-btn @(isFeatured ? "featured-btn" : "")">
+                                        Đăng nhập để mua
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="how-it-works">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Chọn gói VIP</div>
+                    <div class="step-text">Người dùng chọn gói phù hợp với nhu cầu đăng tin.</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Tạo đơn VIP</div>
+                    <div class="step-text">Hệ thống tạo đơn hàng ở trạng thái chờ thanh toán.</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Thanh toán mô phỏng</div>
+                    <div class="step-text">Người dùng xác nhận đã thanh toán trên trang checkout.</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Kích hoạt VIP</div>
+                    <div class="step-text">Tài khoản và tin đăng được cập nhật trạng thái ưu tiên.</div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

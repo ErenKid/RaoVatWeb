@@ -1,63 +1,349 @@
-@model RaoVatWeb.ViewModels.AdminAreaFormViewModel
+@model RaoVatWeb.Models.Area
 
 @{
     ViewData["Title"] = "Thêm khu vực";
+
+    var parentAreas = ViewBag.ParentAreas as List<RaoVatWeb.Models.Area>
+        ?? new List<RaoVatWeb.Models.Area>();
 }
 
-<div class="container mt-4">
-    <h2>Thêm khu vực</h2>
+<style>
+    .area-form-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    <form asp-area="Admin"
-          asp-controller="Areas"
-          asp-action="Create"
-          method="post">
+    .area-form-container {
+        max-width: 1120px;
+        width: 94vw;
+        margin: 0 auto;
+    }
 
-        @Html.AntiForgeryToken()
+    .page-header {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 34px 36px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+        position: relative;
+        overflow: hidden;
+    }
 
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    .page-header::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        bottom: -100px;
+        width: 300px;
+        height: 300px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
 
-        <div class="mb-3">
-            <label asp-for="Name" class="form-label">Tên khu vực</label>
-            <input asp-for="Name" class="form-control" placeholder="Ví dụ: TP.HCM, Hà Nội, Bình Dương..." />
-            <span asp-validation-for="Name" class="text-danger"></span>
+    .page-header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .page-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .page-title {
+        font-size: 42px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: #d1d5db;
+        font-size: 17px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .back-btn {
+        height: 52px;
+        border-radius: 17px;
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .form-panel {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        padding: 30px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+    }
+
+    .form-title {
+        color: #111827;
+        font-size: 30px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .form-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        margin-bottom: 26px;
+    }
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
+    .form-label {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 850;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .custom-input,
+    .custom-select {
+        width: 100%;
+        height: 58px;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        padding: 0 16px;
+        color: #111827;
+        font-size: 17px;
+        font-weight: 700;
+        outline: none;
+    }
+
+    .custom-input:focus,
+    .custom-select:focus {
+        background: white;
+        border-color: #f2b705;
+        box-shadow: 0 0 0 0.22rem rgba(255,212,59,0.22);
+    }
+
+    .status-panel {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 18px;
+    }
+
+    .status-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-check-input {
+        width: 22px;
+        height: 22px;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: #111827;
+        border-color: #111827;
+    }
+
+    .status-label {
+        color: #111827;
+        font-size: 16px;
+        font-weight: 900;
+    }
+
+    .status-text {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.55;
+        font-weight: 650;
+        margin-top: 8px;
+        padding-left: 34px;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .submit-btn {
+        height: 56px;
+        border-radius: 18px;
+        border: none;
+        background: #111827;
+        color: white;
+        padding: 0 24px;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .cancel-btn {
+        height: 56px;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #111827;
+        padding: 0 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .text-danger {
+        color: #dc2626 !important;
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 6px;
+        display: block;
+    }
+
+    @@media (max-width: 760px) {
+        .page-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .page-title {
+            font-size: 32px;
+        }
+
+        .page-header,
+        .form-panel {
+            padding: 22px;
+        }
+
+        .action-row {
+            flex-direction: column;
+        }
+
+        .submit-btn,
+        .cancel-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="area-form-page">
+    <div class="area-form-container">
+        <div class="page-header">
+            <div class="page-header-content">
+                <div>
+                    <div class="page-badge">📍 Khu vực</div>
+                    <div class="page-title">Thêm khu vực</div>
+                    <p class="page-subtitle">Tạo khu vực mới để sử dụng khi đăng tin và tìm kiếm.</p>
+                </div>
+
+                <a asp-area="Admin" asp-controller="Areas" asp-action="Index" class="back-btn">
+                    ← Quay lại
+                </a>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="ParentAreaId" class="form-label">Khu vực cha</label>
+        <div class="form-panel">
+            <div class="form-title">Thông tin khu vực</div>
+            <div class="form-subtitle">Nhập tên khu vực, cấp cha và trạng thái hiển thị.</div>
 
-            <select asp-for="ParentAreaId"
-                    asp-items="@(ViewBag.ParentAreaId as SelectList)"
-                    class="form-select">
-                <option value="">-- Không chọn nếu là khu vực cha --</option>
-            </select>
+            <form asp-area="Admin"
+                  asp-controller="Areas"
+                  asp-action="Create"
+                  method="post"
+                  asp-antiforgery="true">
 
-            <small class="text-muted">
-                Ví dụ: TP.HCM chọn Miền Nam, Hà Nội chọn Miền Bắc.
-            </small>
+                <div asp-validation-summary="ModelOnly"></div>
+
+                <div class="form-group">
+                    <label asp-for="Name" class="form-label">Tên khu vực</label>
+
+                    <input asp-for="Name"
+                           class="custom-input"
+                           placeholder="Nhập tên khu vực" />
+
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ParentAreaId" class="form-label">Khu vực cấp cha</label>
+
+                    <select asp-for="ParentAreaId" class="custom-select">
+                        <option value="">Không có</option>
+
+                        @foreach (var parent in parentAreas)
+                        {
+                            <option value="@parent.AreaId">@parent.Name</option>
+                        }
+                    </select>
+
+                    <span asp-validation-for="ParentAreaId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="status-panel">
+                        <div class="status-row">
+                            <input asp-for="IsActive"
+                                   class="form-check-input"
+                                   checked="checked" />
+
+                            <label asp-for="IsActive" class="status-label">
+                                Đang hoạt động
+                            </label>
+                        </div>
+
+                        <div class="status-text">
+                            Khu vực hoạt động sẽ hiển thị trong trang đăng tin và bộ lọc tìm kiếm.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button type="submit" class="submit-btn">Lưu khu vực</button>
+
+                    <a asp-area="Admin"
+                       asp-controller="Areas"
+                       asp-action="Index"
+                       class="cancel-btn">
+                        Hủy
+                    </a>
+                </div>
+            </form>
         </div>
-
-        <div class="form-check mb-3">
-            <input asp-for="IsActive" class="form-check-input" />
-            <label asp-for="IsActive" class="form-check-label">
-                Hiển thị khu vực
-            </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-            Lưu khu vực
-        </button>
-
-        <a asp-area="Admin"
-           asp-controller="Areas"
-           asp-action="Index"
-           class="btn btn-secondary">
-            Quay lại
-        </a>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

@@ -1,0 +1,486 @@
+@model RaoVatWeb.ViewModels.AccountSettingsViewModel
+
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+}
+
+<style>
+    .profile-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .profile-container {
+        max-width: 1180px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 34px 36px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        bottom: -100px;
+        width: 300px;
+        height: 300px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .page-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .page-title {
+        font-size: 42px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: #d1d5db;
+        font-size: 17px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .account-card {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 22px;
+        padding: 18px;
+        min-width: 250px;
+    }
+
+    .account-name {
+        color: white;
+        font-size: 19px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .account-email {
+        color: #d1d5db;
+        font-size: 14px;
+        font-weight: 650;
+        margin-bottom: 10px;
+    }
+
+    .vip-badge,
+    .normal-badge {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .vip-badge {
+        background: #ef4444;
+        color: white;
+    }
+
+    .normal-badge {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .alert-box {
+        border-radius: 18px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        font-weight: 800;
+    }
+
+    .alert-success {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #047857;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+    }
+
+    .profile-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .form-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        padding: 30px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+    }
+
+    .card-title {
+        color: #111827;
+        font-size: 30px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.55;
+        margin-bottom: 26px;
+    }
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
+    .form-label {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 850;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .custom-input {
+        width: 100%;
+        height: 58px;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        padding: 0 16px;
+        color: #111827;
+        font-size: 17px;
+        font-weight: 700;
+        outline: none;
+    }
+
+    .custom-input:focus {
+        background: white;
+        border-color: #f2b705;
+        box-shadow: 0 0 0 0.22rem rgba(255,212,59,0.22);
+    }
+
+    .custom-input[readonly] {
+        background: #f3f4f6;
+        color: #6b7280;
+        cursor: not-allowed;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .info-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 16px;
+    }
+
+    .info-label {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .info-value {
+        color: #111827;
+        font-size: 16px;
+        font-weight: 900;
+    }
+
+    .submit-btn {
+        height: 56px;
+        border-radius: 18px;
+        border: none;
+        background: #111827;
+        color: white;
+        padding: 0 24px;
+        font-size: 17px;
+        font-weight: 900;
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        background: #000;
+    }
+
+    .password-note {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 20px;
+        padding: 15px 16px;
+        font-size: 14px;
+        line-height: 1.55;
+        font-weight: 750;
+        margin-bottom: 22px;
+    }
+
+    @@media (max-width: 980px) {
+        .profile-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .account-card {
+            width: 100%;
+        }
+    }
+
+    @@media (max-width: 620px) {
+        .page-title {
+            font-size: 32px;
+        }
+
+        .page-header,
+        .form-card {
+            padding: 22px;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="profile-page">
+    <div class="profile-container">
+        <div class="page-header">
+            <div class="page-header-content">
+                <div>
+                    <div class="page-badge">
+                        👤 Tài khoản
+                    </div>
+
+                    <div class="page-title">
+                        Tài khoản của tôi
+                    </div>
+
+                    <p class="page-subtitle">
+                        Quản lý thông tin cá nhân và mật khẩu đăng nhập.
+                    </p>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-name">
+                        @(string.IsNullOrWhiteSpace(Model.FullName) ? "Người dùng" : Model.FullName)
+                    </div>
+
+                    <div class="account-email">
+                        @Model.Email
+                    </div>
+
+                    @if (Model.IsVip)
+                    {
+                        <span class="vip-badge">
+                            VIP đến @(Model.VipExpiredAt.HasValue ? Model.VipExpiredAt.Value.ToString("dd/MM/yyyy") : "")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="normal-badge">
+                            Thành viên thường
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-box alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-box alert-error">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="profile-layout">
+            <div class="form-card">
+                <div class="card-title">
+                    Thông tin cá nhân
+                </div>
+
+                <div class="card-subtitle">
+                    Cập nhật họ tên và số điện thoại liên hệ.
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-box">
+                        <div class="info-label">
+                            Ngày tạo tài khoản
+                        </div>
+
+                        <div class="info-value">
+                            @if (Model.CreatedAt.Year <= 1900)
+                            {
+                                <span>Chưa xác định</span>
+                            }
+                            else
+                            {
+                                @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-label">
+                            Trạng thái
+                        </div>
+
+                        <div class="info-value">
+                            @(Model.IsVip ? "Thành viên VIP" : "Thành viên thường")
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-controller="Profile"
+                      asp-action="UpdateProfile"
+                      method="post"
+                      asp-antiforgery="true">
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input value="@Model.Email"
+                               class="custom-input"
+                               readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="FullName" class="form-label">
+                            Họ tên
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="custom-input"
+                               placeholder="Nhập họ tên" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PhoneNumber" class="form-label">
+                            Số điện thoại
+                        </label>
+
+                        <input asp-for="PhoneNumber"
+                               class="custom-input"
+                               placeholder="Nhập số điện thoại" />
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Lưu thông tin
+                    </button>
+                </form>
+            </div>
+
+            <div class="form-card">
+                <div class="card-title">
+                    Đổi mật khẩu
+                </div>
+
+                <div class="card-subtitle">
+                    Cập nhật mật khẩu đăng nhập cho tài khoản.
+                </div>
+
+                <div class="password-note">
+                    Mật khẩu mới nên có ít nhất 6 ký tự và không trùng với mật khẩu cũ.
+                </div>
+
+                <form asp-controller="Profile"
+                      asp-action="ChangePassword"
+                      method="post"
+                      asp-antiforgery="true">
+
+                    <div class="form-group">
+                        <label asp-for="CurrentPassword" class="form-label">
+                            Mật khẩu hiện tại
+                        </label>
+
+                        <input asp-for="CurrentPassword"
+                               type="password"
+                               class="custom-input"
+                               placeholder="Nhập mật khẩu hiện tại" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NewPassword" class="form-label">
+                            Mật khẩu mới
+                        </label>
+
+                        <input asp-for="NewPassword"
+                               type="password"
+                               class="custom-input"
+                               placeholder="Nhập mật khẩu mới" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ConfirmPassword" class="form-label">
+                            Xác nhận mật khẩu mới
+                        </label>
+
+                        <input asp-for="ConfirmPassword"
+                               type="password"
+                               class="custom-input"
+                               placeholder="Nhập lại mật khẩu mới" />
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Đổi mật khẩu
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

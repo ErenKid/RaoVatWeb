@@ -2,116 +2,719 @@
 
 @{
     ViewData["Title"] = "Quản lý người dùng";
+
+    var users = Model != null
+        ? Model.ToList()
+        : new List<RaoVatWeb.ViewModels.AdminUserViewModel>();
+
+    var vipCount = users.Count(x => x.IsVip);
+    var normalCount = users.Count(x => !x.IsVip);
+    var lockedCount = users.Count(x => x.IsLocked);
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Quản lý người dùng</h2>
-
-        <a asp-area="Admin"
-           asp-controller="Dashboard"
-           asp-action="Index"
-           class="btn btn-secondary">
-            Quay lại Dashboard
-        </a>
-    </div>
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
-        </div>
+    .users-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
     }
 
-    <table class="table table-bordered table-hover align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Email</th>
-                <th>Họ tên</th>
-                <th>Số điện thoại</th>
-                <th>Vai trò</th>
-                <th>Số tin đã đăng</th>
-                <th>Trạng thái</th>
-                <th style="width: 180px;">Thao tác</th>
-            </tr>
-        </thead>
+    .users-container {
+        max-width: 1360px;
+        width: 94vw;
+        margin: 0 auto;
+    }
 
-        <tbody>
-            @foreach (var item in Model)
+    .users-hero {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 34px;
+        padding: 38px;
+        margin-bottom: 24px;
+        box-shadow: 0 22px 52px rgba(15,23,42,0.18);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .users-hero::after {
+        content: "";
+        position: absolute;
+        right: -90px;
+        bottom: -110px;
+        width: 320px;
+        height: 320px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .hero-title {
+        font-size: 44px;
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 10px;
+    }
+
+    .hero-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.65;
+        max-width: 780px;
+        margin: 0;
+    }
+
+    .hero-action {
+        height: 54px;
+        border-radius: 18px;
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+        padding: 0 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .hero-action:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .alert-custom {
+        border-radius: 18px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        font-weight: 800;
+    }
+
+    .alert-success-custom {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #047857;
+    }
+
+    .alert-error-custom {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 26px;
+        padding: 22px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        right: -34px;
+        bottom: -42px;
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        background: #fffbea;
+    }
+
+    .stat-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 17px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        color: #111827;
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .users-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        padding: 26px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .card-title {
+        color: #111827;
+        font-size: 30px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.55;
+    }
+
+    .user-count {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-size: 14px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .user-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .user-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        background: #fff;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 70px 1fr 230px;
+        gap: 18px;
+        align-items: center;
+        transition: 0.18s ease;
+    }
+
+    .user-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 34px rgba(15,23,42,0.09);
+    }
+
+    .avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 24px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 27px;
+        font-weight: 900;
+    }
+
+    .user-name-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .user-name {
+        color: #111827;
+        font-size: 22px;
+        line-height: 1.3;
+        font-weight: 900;
+    }
+
+    .user-badge {
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 900;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .badge-vip {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    .badge-normal {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .badge-role {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+    }
+
+    .badge-locked {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .badge-active {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .user-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.5;
+    }
+
+    .vip-expired {
+        color: #92400e;
+        background: #fffbea;
+        border: 1px solid #facc15;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 850;
+    }
+
+    .post-count-pill {
+        color: #374151;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 850;
+    }
+
+    .right-box {
+        text-align: right;
+    }
+
+    .created-label {
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .created-value {
+        color: #111827;
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .date-unknown {
+        color: #9ca3af;
+        font-style: italic;
+        font-weight: 800;
+    }
+
+    .user-action-box {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .lock-btn,
+    .unlock-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 9px 14px;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .lock-btn {
+        background: #ef4444;
+        color: white;
+    }
+
+    .lock-btn:hover {
+        background: #dc2626;
+    }
+
+    .unlock-btn {
+        background: #16a34a;
+        color: white;
+    }
+
+    .unlock-btn:hover {
+        background: #15803d;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 24px;
+        padding: 46px 24px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 17px;
+        font-weight: 750;
+    }
+
+    .empty-box strong {
+        color: #111827;
+        font-size: 23px;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    @@media (max-width: 1100px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .hero-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-item {
+            grid-template-columns: 70px 1fr;
+        }
+
+        .right-box {
+            grid-column: 1 / -1;
+            text-align: left;
+        }
+
+        .user-action-box {
+            justify-content: flex-start;
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .user-item {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-title {
+            font-size: 33px;
+        }
+
+        .users-hero,
+        .users-card {
+            padding: 22px;
+        }
+
+        .card-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="users-page">
+    <div class="users-container">
+        <div class="users-hero">
+            <div class="hero-content">
+                <div>
+                    <div class="hero-badge">
+                        👥 Quản trị người dùng
+                    </div>
+
+                    <div class="hero-title">
+                        Quản lý tài khoản thành viên
+                    </div>
+
+                    <p class="hero-subtitle">
+                        Theo dõi tài khoản người dùng, trạng thái VIP, quyền tài khoản, số tin đã đăng và tình trạng khóa tài khoản trong hệ thống.
+                    </p>
+                </div>
+
+                <a asp-area="Admin"
+                   asp-controller="Dashboard"
+                   asp-action="Index"
+                   class="hero-action">
+                    Về Dashboard
+                </a>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-custom alert-success-custom">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-custom alert-error-custom">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-label">Tổng người dùng</div>
+                    <div class="stat-value">@users.Count</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">👑</div>
+                    <div class="stat-label">Thành viên VIP</div>
+                    <div class="stat-value">@vipCount</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">🙂</div>
+                    <div class="stat-label">Thành viên thường</div>
+                    <div class="stat-value">@normalCount</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">🔒</div>
+                    <div class="stat-label">Tài khoản bị khóa</div>
+                    <div class="stat-value">@lockedCount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="users-card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">
+                        Danh sách người dùng
+                    </div>
+
+                    <div class="card-subtitle">
+                        Người dùng mới nhất được hiển thị theo danh sách quản trị.
+                    </div>
+                </div>
+
+                <div class="user-count">
+                    @users.Count tài khoản
+                </div>
+            </div>
+
+            @if (!users.Any())
             {
-                <tr>
-                    <td>@item.Email</td>
-
-                    <td>@item.FullName</td>
-
-                    <td>
-                        @(string.IsNullOrWhiteSpace(item.PhoneNumber) ? "Chưa có" : item.PhoneNumber)
-                    </td>
-
-                    <td>
-                        <span class="badge bg-info text-dark">
-                            @item.Roles
-                        </span>
-                    </td>
-
-                    <td>@item.PostCount</td>
-
-                    <td>
-                        @if (item.IsLocked)
-                        {
-                            <span class="badge bg-danger">Đang bị khóa</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">Hoạt động</span>
-                        }
-                    </td>
-
-                    <td>
-                        @if (item.IsLocked)
-                        {
-                            <form asp-area="Admin"
-                                  asp-controller="Users"
-                                  asp-action="Unlock"
-                                  asp-route-id="@item.UserId"
-                                  method="post"
-                                  class="d-inline">
-                                @Html.AntiForgeryToken()
-
-                                <button type="submit"
-                                        class="btn btn-sm btn-success"
-                                        onclick="return confirm('Bạn có chắc muốn mở khóa tài khoản này không?');">
-                                    Mở khóa
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <form asp-area="Admin"
-                                  asp-controller="Users"
-                                  asp-action="Lock"
-                                  asp-route-id="@item.UserId"
-                                  method="post"
-                                  class="d-inline">
-                                @Html.AntiForgeryToken()
-
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Bạn có chắc muốn khóa tài khoản này không?');">
-                                    Khóa
-                                </button>
-                            </form>
-                        }
-                    </td>
-                </tr>
+                <div class="empty-box">
+                    <strong>Chưa có người dùng nào.</strong>
+                    Hệ thống chưa ghi nhận tài khoản thành viên.
+                </div>
             }
-        </tbody>
-    </table>
+            else
+            {
+                <div class="user-list">
+                    @foreach (var user in users)
+                    {
+                        var displayName = !string.IsNullOrWhiteSpace(user.FullName)
+                            ? user.FullName
+                            : "Người dùng";
+
+                        var avatarText = displayName.Substring(0, 1).ToUpper();
+
+                        var roleText = !string.IsNullOrWhiteSpace(user.Roles)
+                            ? user.Roles
+                            : "Member";
+
+                        <div class="user-item">
+                            <div class="avatar">
+                                @avatarText
+                            </div>
+
+                            <div>
+                                <div class="user-name-row">
+                                    <div class="user-name">
+                                        @displayName
+                                    </div>
+
+                                    <span class="user-badge badge-role">
+                                        @roleText
+                                    </span>
+
+                                    @if (user.IsVip)
+                                    {
+                                        <span class="user-badge badge-vip">
+                                            VIP
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="user-badge badge-normal">
+                                            Thường
+                                        </span>
+                                    }
+
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="user-badge badge-locked">
+                                            Đã khóa
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="user-badge badge-active">
+                                            Hoạt động
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="user-meta">
+                                    <span>
+                                        📧 @(string.IsNullOrWhiteSpace(user.Email)
+                                            ? "Chưa cập nhật"
+                                            : user.Email)
+                                    </span>
+
+                                    <span>
+                                        📞 @(string.IsNullOrWhiteSpace(user.PhoneNumber)
+                                            ? "Chưa cập nhật"
+                                            : user.PhoneNumber)
+                                    </span>
+
+                                    <span class="post-count-pill">
+                                        📢 @user.PostCount tin đăng
+                                    </span>
+
+                                    @if (user.IsVip && user.VipExpiredAt.HasValue)
+                                    {
+                                        <span class="vip-expired">
+                                            VIP đến @user.VipExpiredAt.Value.ToString("dd/MM/yyyy")
+                                        </span>
+                                    }
+
+                                    @if (user.IsLocked && user.LockoutEnd.HasValue)
+                                    {
+                                        <span class="vip-expired">
+                                            Khóa đến @user.LockoutEnd.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="right-box">
+                                <div class="created-label">
+                                    Ngày tạo tài khoản
+                                </div>
+
+                                <div class="created-value">
+                                    @if (user.CreatedAt.Year <= 1900)
+                                    {
+                                        <span class="date-unknown">Chưa xác định</span>
+                                    }
+                                    else
+                                    {
+                                        @user.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                </div>
+
+                                <div class="user-action-box">
+                                    @if (user.IsLocked)
+                                    {
+                                        <form asp-area="Admin"
+                                              asp-controller="Users"
+                                              asp-action="Unlock"
+                                              asp-route-id="@user.UserId"
+                                              method="post"
+                                              asp-antiforgery="true">
+
+                                            <button type="submit"
+                                                    class="unlock-btn"
+                                                    onclick="return confirm('Mở khóa tài khoản này?');">
+                                                Mở khóa
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-area="Admin"
+                                              asp-controller="Users"
+                                              asp-action="Lock"
+                                              asp-route-id="@user.UserId"
+                                              method="post"
+                                              asp-antiforgery="true">
+
+                                            <button type="submit"
+                                                    class="lock-btn"
+                                                    onclick="return confirm('Khóa tài khoản này?');">
+                                                Khóa
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>

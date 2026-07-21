@@ -75,17 +75,100 @@
             color: white !important;
         }
 
-        .rv-logout-btn {
-            border: none;
-            background: transparent;
-            color: #111827;
-            font-weight: 750;
+        .rv-account-btn {
+            background: #111827;
+            color: #ffd43b !important;
+            border: 1px solid rgba(17, 24, 39, 0.2);
             border-radius: 999px;
-            padding: 9px 13px;
+            padding: 9px 15px;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
         }
 
-        .rv-logout-btn:hover {
-            background: rgba(255,255,255,0.65);
+        .rv-account-btn:hover,
+        .rv-account-btn:focus {
+            background: #000;
+            color: #ffd43b !important;
+        }
+
+        .rv-account-menu {
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 10px;
+            min-width: 285px;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
+        }
+
+        .rv-dropdown-title {
+            padding: 10px 12px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+        }
+
+        .rv-dropdown-title strong {
+            display: block;
+            color: #111827;
+            font-size: 15px;
+            font-weight: 950;
+            word-break: break-word;
+        }
+
+        .rv-dropdown-title span {
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .rv-dropdown-section {
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 900;
+            padding: 8px 12px 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .rv-dropdown-item {
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: #111827;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+        }
+
+        .rv-dropdown-item:hover {
+            background: #fffbea;
+            color: #111827;
+        }
+
+        .rv-dropdown-post {
+            background: #111827;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .rv-dropdown-post:hover {
+            background: #000;
+            color: white;
+        }
+
+        .rv-dropdown-logout {
+            color: #b91c1c;
+        }
+
+        .rv-dropdown-logout:hover {
+            background: #fef2f2;
+            color: #b91c1c;
         }
 
         .rv-main {
@@ -107,10 +190,19 @@
 
         @@media (max-width: 991.98px) {
             .rv-nav-link,
-            .rv-post-btn,
-            .rv-logout-btn {
+            .rv-post-btn {
                 margin-top: 6px;
                 display: inline-block;
+            }
+
+            .rv-account-btn {
+                width: 100%;
+                justify-content: center;
+                margin-top: 8px;
+            }
+
+            .rv-account-menu {
+                width: 100%;
             }
         }
     </style>
@@ -144,64 +236,19 @@
                         {
                             <li class="nav-item">
                                 <a class="nav-link rv-nav-link"
+                                   asp-area=""
+                                   asp-controller="Home"
+                                   asp-action="Index">
+                                    Trang chủ
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rv-nav-link"
                                    asp-area="Admin"
                                    asp-controller="Dashboard"
                                    asp-action="Index">
                                     Dashboard
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link rv-nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="Posts"
-                                   asp-action="Index">
-                                    Duyệt tin
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link rv-nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="Users"
-                                   asp-action="Index">
-                                    Người dùng
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link rv-nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="Categories"
-                                   asp-action="Index">
-                                    Danh mục
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link rv-nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="Areas"
-                                   asp-action="Index">
-                                    Khu vực
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link rv-nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="VipPackages"
-                                   asp-action="Index">
-                                    Gói VIP
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link rv-nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="VipOrders"
-                                   asp-action="Index">
-                                    Đơn VIP
                                 </a>
                             </li>
                         }
@@ -233,61 +280,194 @@
                                     Gói VIP
                                 </a>
                             </li>
-
-                            @if (User.Identity != null && User.Identity.IsAuthenticated)
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link rv-nav-link"
-                                       asp-area=""
-                                       asp-controller="Posts"
-                                       asp-action="MyPosts">
-                                        Tin của tôi
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link rv-nav-link"
-                                       asp-area=""
-                                       asp-controller="Chats"
-                                       asp-action="Index">
-                                        Tin nhắn
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link rv-nav-link"
-                                       asp-area=""
-                                       asp-controller="VipPackages"
-                                       asp-action="MyOrders">
-                                        Lịch sử VIP
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link rv-post-btn"
-                                       asp-area=""
-                                       asp-controller="Posts"
-                                       asp-action="Create">
-                                        + Đăng tin
-                                    </a>
-                                </li>
-                            }
                         }
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
-                                <form asp-area=""
-                                      asp-controller="Account"
-                                      asp-action="Logout"
-                                      method="post"
-                                      class="d-inline">
-                                    <button type="submit" class="rv-logout-btn">
-                                        Đăng xuất
-                                    </button>
-                                </form>
+                            <li class="nav-item dropdown">
+                                <button class="btn rv-account-btn dropdown-toggle"
+                                        type="button"
+                                        id="accountDropdown"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    👤 Tài khoản
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end rv-account-menu"
+                                    aria-labelledby="accountDropdown">
+
+                                    <li>
+                                        <div class="rv-dropdown-title">
+                                            <strong>@User.Identity.Name</strong>
+
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <span>Quản trị viên</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Thành viên</span>
+                                            }
+                                        </div>
+                                    </li>
+
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <div class="rv-dropdown-section">
+                                                Quản trị hệ thống
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="Dashboard"
+                                               asp-action="Index">
+                                                📊 Dashboard
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="Posts"
+                                               asp-action="Index">
+                                                ✅ Duyệt tin
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="Users"
+                                               asp-action="Index">
+                                                👥 Người dùng
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="Categories"
+                                               asp-action="Index">
+                                                📂 Danh mục
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="Areas"
+                                               asp-action="Index">
+                                                📍 Khu vực
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="VipPackages"
+                                               asp-action="Index">
+                                                👑 Quản lý gói VIP
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area="Admin"
+                                               asp-controller="VipOrders"
+                                               asp-action="Index">
+                                                🧾 Đơn VIP
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <hr class="dropdown-divider" />
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area=""
+                                               asp-controller="Profile"
+                                               asp-action="Index">
+                                                👤 Tài khoản của tôi
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <a class="rv-dropdown-item rv-dropdown-post"
+                                               asp-area=""
+                                               asp-controller="Posts"
+                                               asp-action="Create">
+                                                ➕ Đăng tin mới
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <div class="rv-dropdown-section">
+                                                Quản lý cá nhân
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area=""
+                                               asp-controller="Posts"
+                                               asp-action="MyPosts">
+                                                📢 Tin của tôi
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area=""
+                                               asp-controller="Chats"
+                                               asp-action="Index">
+                                                💬 Tin nhắn
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area=""
+                                               asp-controller="VipPackages"
+                                               asp-action="MyOrders">
+                                                👑 Lịch sử VIP
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="rv-dropdown-item"
+                                               asp-area=""
+                                               asp-controller="Profile"
+                                               asp-action="Index">
+                                                👤 Tài khoản của tôi
+                                            </a>
+                                        </li>
+                                    }
+
+                                    <li>
+                                        <hr class="dropdown-divider" />
+                                    </li>
+
+                                    <li>
+                                        <form asp-area=""
+                                              asp-controller="Account"
+                                              asp-action="Logout"
+                                              method="post">
+
+                                            <button type="submit"
+                                                    class="rv-dropdown-item rv-dropdown-logout">
+                                                🚪 Đăng xuất
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         }
                         else
@@ -329,7 +509,7 @@
             </div>
 
             <div>
-                Đồ án tốt nghiệp - ASP.NET Core MVC + MySQL
+                ASP.NET Core MVC + MySQL
             </div>
         </div>
     </footer>

@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using RaoVatWeb.Data;
 using RaoVatWeb.Models;
 using RaoVatWeb.Models.Enums;
+using System.Security.Claims;
 
 namespace RaoVatWeb.Controllers
 {
-    [Authorize]
     public class VipPackagesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -22,52 +22,43 @@ namespace RaoVatWeb.Controllers
             _userManager = userManager;
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var packages = await _context.VipPackages
-                .Where(p => p.IsActive)
-                .OrderBy(p => p.Price)
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.Price)
                 .ToListAsync();
-
-            var currentUser = await _userManager.GetUserAsync(User);
-
-            ViewBag.IsVipActive = currentUser != null &&
-                                  currentUser.IsVip &&
-                                  currentUser.VipExpiredAt.HasValue &&
-                                  currentUser.VipExpiredAt.Value > DateTime.Now;
-
-            ViewBag.VipExpiredAt = currentUser?.VipExpiredAt;
 
             return View(packages);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Buy(int packageId)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Checkout(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (currentUser == null)
+            if (string.IsNullOrEmpty(userId))
             {
                 return Challenge();
             }
 
-            var package = await _context.VipPackages
-                .FirstOrDefaultAsync(p => p.VipPackageId == packageId && p.IsActive);
+            var vipPackage = await _context.VipPackages
+                .FirstOrDefaultAsync(x => x.VipPackageId == id && x.IsActive);
 
-            if (package == null)
+            if (vipPackage == null)
             {
-                return NotFound();
+                TempData["Error"] = "Gói VIP không tồn tại hoặc đã bị tắt.";
+                return RedirectToAction(nameof(Index));
             }
-
-            var orderCode = $"VIP{DateTime.Now:yyyyMMddHHmmss}{Random.Shared.Next(1000, 9999)}";
 
             var order = new VipOrder
             {
-                OrderCode = orderCode,
-                UserId = currentUser.Id,
-                VipPackageId = package.VipPackageId,
-                Amount = package.Price,
+                UserId = userId,
+                VipPackageId = vipPackage.VipPackageId,
+                VipPackage = vipPackage,
+                Amount = vipPackage.Price,
                 Status = VipOrderStatus.Pending,
                 CreatedAt = DateTime.Now
             };
@@ -75,27 +66,35 @@ namespace RaoVatWeb.Controllers
             _context.VipOrders.Add(order);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Checkout), new { id = order.VipOrderId });
+            order = await _context.VipOrders
+                .Include(x => x.VipPackage)
+                .FirstAsync(x => x.VipOrderId == order.VipOrderId);
+
+            return View(order);
         }
 
-        public async Task<IActionResult> Checkout(int id)
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmPayment(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (currentUser == null)
+            if (string.IsNullOrEmpty(userId))
             {
                 return Challenge();
             }
 
             var order = await _context.VipOrders
-                .Include(o => o.VipPackage)
-                .FirstOrDefaultAsync(o =>
-                    o.VipOrderId == id &&
-                    o.UserId == currentUser.Id);
+                .Include(x => x.VipPackage)
+                .FirstOrDefaultAsync(x =>
+                    x.VipOrderId == id &&
+                    x.UserId == userId);
 
             if (order == null)
             {
-                return NotFound();
+                TempData["Error"] = "Không tìm thấy đơn VIP.";
+                return RedirectToAction(nameof(Index));
             }
 
             if (order.Status == VipOrderStatus.Paid)
@@ -103,41 +102,22 @@ namespace RaoVatWeb.Controllers
                 return RedirectToAction(nameof(Success), new { id = order.VipOrderId });
             }
 
-            return View(order);
-        }
+            if (order.VipPackage == null)
+            {
+                TempData["Error"] = "Không tìm thấy thông tin gói VIP.";
+                return RedirectToAction(nameof(Index));
+            }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmPayment(int id)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUser = await _userManager.FindByIdAsync(userId);
 
             if (currentUser == null)
             {
                 return Challenge();
             }
 
-            var order = await _context.VipOrders
-                .Include(o => o.VipPackage)
-                .FirstOrDefaultAsync(o =>
-                    o.VipOrderId == id &&
-                    o.UserId == currentUser.Id &&
-                    o.Status == VipOrderStatus.Pending);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            if (order.VipPackage == null)
-            {
-                return NotFound();
-            }
-
             var now = DateTime.Now;
 
-            var startDate = currentUser.IsVip &&
-                            currentUser.VipExpiredAt.HasValue &&
+            var startDate = currentUser.VipExpiredAt.HasValue &&
                             currentUser.VipExpiredAt.Value > now
                 ? currentUser.VipExpiredAt.Value
                 : now;
@@ -152,63 +132,58 @@ namespace RaoVatWeb.Controllers
             currentUser.VipExpiredAt = newExpiredAt;
 
             await _userManager.UpdateAsync(currentUser);
+
+            var userPosts = await _context.Posts
+                .Where(p => p.UserId == userId
+                            && p.Status != PostStatus.Rejected
+                            && p.Status != PostStatus.Hidden)
+                .ToListAsync();
+
+            foreach (var post in userPosts)
+            {
+                post.IsVipPriority = true;
+            }
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Success), new { id = order.VipOrderId });
         }
 
+        [Authorize]
+        [HttpGet]
         public async Task<IActionResult> Success(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-
-            if (currentUser == null)
-            {
-                return Challenge();
-            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var order = await _context.VipOrders
-                .Include(o => o.VipPackage)
-                .FirstOrDefaultAsync(o =>
-                    o.VipOrderId == id &&
-                    o.UserId == currentUser.Id &&
-                    o.Status == VipOrderStatus.Paid);
+                .Include(x => x.VipPackage)
+                .FirstOrDefaultAsync(x =>
+                    x.VipOrderId == id &&
+                    x.UserId == userId);
 
             if (order == null)
             {
-                return NotFound();
+                TempData["Error"] = "Không tìm thấy đơn VIP.";
+                return RedirectToAction(nameof(Index));
             }
 
             return View(order);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Cancel(int id)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> MyOrders()
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (currentUser == null)
-            {
-                return Challenge();
-            }
+            var orders = await _context.VipOrders
+                .Include(x => x.VipPackage)
+                .Where(x => x.UserId == userId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
 
-            var order = await _context.VipOrders
-                .FirstOrDefaultAsync(o =>
-                    o.VipOrderId == id &&
-                    o.UserId == currentUser.Id &&
-                    o.Status == VipOrderStatus.Pending);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            order.Status = VipOrderStatus.Cancelled;
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Đã hủy đơn đăng ký VIP.";
-            return RedirectToAction(nameof(Index));
+            return View(orders);
         }
     }
 }
+

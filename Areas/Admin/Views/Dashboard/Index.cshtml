@@ -1,176 +1,751 @@
-@using RaoVatWeb.Models.Enums
 @model RaoVatWeb.ViewModels.AdminDashboardViewModel
+@using RaoVatWeb.Models.Enums
 
 @{
     ViewData["Title"] = "Dashboard Admin";
+
+    var maxPostStatus = Math.Max(
+        1,
+        new[] {
+            Model.PendingPosts,
+            Model.ApprovedPosts,
+            Model.RejectedPosts,
+            Model.HiddenPosts
+        }.Max()
+    );
+
+    var maxSystem = Math.Max(
+        1,
+        new[] {
+            Model.TotalUsers,
+            Model.TotalPosts,
+            Model.TotalCategories,
+            Model.TotalAreas,
+            Model.TotalImages,
+            Model.TotalVipOrders
+        }.Max()
+    );
+
+    string BarHeight(int value, int max)
+    {
+        var percent = value * 100.0 / max;
+        percent = Math.Max(8, percent);
+        return percent.ToString("0") + "%";
+    }
 }
 
-        <div class="container mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Dashboard quản trị</h2>
-
-            <a asp-area="Admin"
-            asp-controller="Users"
-            asp-action="Index"
-            class="btn btn-outline-primary">
-                Quản lý người dùng
-            </a>
-        </div>
-
-    <div class="row">
-        <div class="col-md-3 mb-3">
-            <div class="card text-bg-primary">
-                <div class="card-body">
-                    <h6>Tổng tin đăng</h6>
-                    <h2>@Model.TotalPosts</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <div class="card text-bg-warning">
-                <div class="card-body">
-                    <h6>Tin chờ duyệt</h6>
-                    <h2>@Model.PendingPosts</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <div class="card text-bg-success">
-                <div class="card-body">
-                    <h6>Tin đã duyệt</h6>
-                    <h2>@Model.ApprovedPosts</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <div class="card text-bg-danger">
-                <div class="card-body">
-                    <h6>Tin bị từ chối</h6>
-                    <h2>@Model.RejectedPosts</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card text-bg-secondary">
-                <div class="card-body">
-                    <h6>Tin đã ẩn</h6>
-                    <h2>@Model.HiddenPosts</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card text-bg-info">
-                <div class="card-body">
-                    <h6>Tổng người dùng</h6>
-                    <h2>@Model.TotalUsers</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card text-bg-dark">
-                <div class="card-body">
-                    <h6>Tổng hình ảnh tin đăng</h6>
-                    <h2>@Model.TotalImages</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Tin mới đăng gần đây</h4>
-
-        <a asp-area="Admin"
-           asp-controller="Posts"
-           asp-action="Index"
-           class="btn btn-outline-primary">
-            Xem tất cả tin đăng
-        </a>
-    </div>
-
-    @if (Model.RecentPosts == null || Model.RecentPosts.Count == 0)
-    {
-        <div class="alert alert-info">
-            Chưa có tin đăng nào trong hệ thống.
-        </div>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
-    else
-    {
-        <table class="table table-bordered table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Tiêu đề</th>
-                    <th>Danh mục</th>
-                    <th>Khu vực</th>
-                    <th>Giá</th>
-                    <th>Trạng thái</th>
-                    <th>Ngày đăng</th>
-                    <th style="width: 120px;">Thao tác</th>
-                </tr>
-            </thead>
 
-            <tbody>
-                @foreach (var item in Model.RecentPosts)
-                {
-                    <tr>
-                        <td>@item.Title</td>
-
-                        <td>
-                            @(item.Category != null ? item.Category.Name : "Chưa có")
-                        </td>
-
-                        <td>
-                            @(item.Area != null ? item.Area.Name : "Chưa có")
-                        </td>
-
-                        <td>
-                            @string.Format("{0:N0} VNĐ", item.Price)
-                        </td>
-
-                        <td>
-                            @if (item.Status == PostStatus.Pending)
-                            {
-                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
-                            }
-                            else if (item.Status == PostStatus.Approved)
-                            {
-                                <span class="badge bg-success">Đã duyệt</span>
-                            }
-                            else if (item.Status == PostStatus.Rejected)
-                            {
-                                <span class="badge bg-danger">Bị từ chối</span>
-                            }
-                            else if (item.Status == PostStatus.Hidden)
-                            {
-                                <span class="badge bg-secondary">Đã ẩn</span>
-                            }
-                        </td>
-
-                        <td>
-                            @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                        </td>
-
-                        <td>
-                            <a asp-area="Admin"
-                               asp-controller="Posts"
-                               asp-action="Details"
-                               asp-route-id="@item.PostId"
-                               class="btn btn-sm btn-primary">
-                                Chi tiết
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    .dashboard-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
     }
+
+    .dashboard-container {
+        max-width: 1360px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .dashboard-hero {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 34px;
+        padding: 38px;
+        margin-bottom: 24px;
+        box-shadow: 0 22px 52px rgba(15,23,42,0.18);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-hero::after {
+        content: "";
+        position: absolute;
+        right: -90px;
+        bottom: -110px;
+        width: 320px;
+        height: 320px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .admin-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .dashboard-title {
+        font-size: 46px;
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.65;
+        max-width: 760px;
+        margin: 0;
+    }
+
+    .time-card {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 24px;
+        padding: 18px 20px;
+        min-width: 230px;
+    }
+
+    .time-label {
+        color: #d1d5db;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .time-value {
+        color: #ffd43b;
+        font-size: 21px;
+        font-weight: 900;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 26px;
+        padding: 22px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        right: -32px;
+        bottom: -38px;
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        background: #fffbea;
+    }
+
+    .stat-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 17px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        color: #111827;
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .chart-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .chart-card,
+    .quick-card,
+    .recent-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        padding: 26px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .card-title {
+        color: #111827;
+        font-size: 29px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.55;
+    }
+
+    .chart-total {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-size: 14px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .bar-chart {
+        height: 320px;
+        border-radius: 24px;
+        background:
+            linear-gradient(to top, #e5e7eb 1px, transparent 1px);
+        background-size: 100% 64px;
+        border: 1px solid #e5e7eb;
+        padding: 28px 20px 18px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        gap: 18px;
+    }
+
+    .bar-item {
+        height: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+    }
+
+    .bar-value {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .bar {
+        width: 68%;
+        min-width: 42px;
+        max-width: 76px;
+        border-radius: 16px 16px 6px 6px;
+        background: linear-gradient(180deg, #ffd43b, #f59e0b);
+        box-shadow: 0 12px 26px rgba(245,158,11,0.22);
+        transition: 0.2s ease;
+    }
+
+    .bar:hover {
+        transform: translateY(-4px);
+        filter: brightness(0.98);
+    }
+
+    .bar-dark {
+        background: linear-gradient(180deg, #111827, #020617);
+        box-shadow: 0 12px 26px rgba(17,24,39,0.20);
+    }
+
+    .bar-red {
+        background: linear-gradient(180deg, #ef4444, #b91c1c);
+        box-shadow: 0 12px 26px rgba(239,68,68,0.20);
+    }
+
+    .bar-gray {
+        background: linear-gradient(180deg, #9ca3af, #4b5563);
+        box-shadow: 0 12px 26px rgba(75,85,99,0.18);
+    }
+
+    .bar-label {
+        margin-top: 12px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 850;
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .quick-link {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 18px;
+        text-decoration: none;
+        color: #111827;
+        transition: 0.18s ease;
+    }
+
+    .quick-link:hover {
+        background: #fffbea;
+        border-color: #facc15;
+        color: #111827;
+        transform: translateY(-3px);
+        box-shadow: 0 14px 28px rgba(15,23,42,0.08);
+    }
+
+    .quick-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: #ffd43b;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+
+    .quick-title {
+        font-size: 17px;
+        font-weight: 900;
+        margin-bottom: 5px;
+    }
+
+    .quick-text {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 650;
+    }
+
+    .recent-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .recent-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 18px;
+        background: #fff;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        align-items: center;
+    }
+
+    .recent-title {
+        color: #111827;
+        font-size: 18px;
+        font-weight: 900;
+        margin-bottom: 8px;
+        line-height: 1.35;
+    }
+
+    .recent-meta {
+        color: #6b7280;
+        font-size: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-weight: 650;
+    }
+
+    .badge-status {
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 900;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .badge-pending {
+        background: #fff7ed;
+        color: #9a3412;
+        border-color: #fed7aa;
+    }
+
+    .badge-approved {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .badge-rejected {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .badge-hidden {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 22px;
+        padding: 32px 20px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    @@media (max-width: 1150px) {
+        .stat-grid,
+        .chart-layout {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .hero-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .quick-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .stat-grid,
+        .chart-layout,
+        .quick-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-title {
+            font-size: 34px;
+        }
+
+        .dashboard-hero,
+        .chart-card,
+        .quick-card,
+        .recent-card {
+            padding: 22px;
+        }
+
+        .card-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .recent-item {
+            grid-template-columns: 1fr;
+        }
+
+        .bar-chart {
+            gap: 10px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .bar {
+            min-width: 34px;
+        }
+    }
+</style>
+
+<div class="dashboard-page">
+    <div class="dashboard-container">
+        <div class="dashboard-hero">
+            <div class="hero-content">
+                <div>
+                    <div class="admin-badge">
+                        🛠 Trang quản trị RaoVatWeb
+                    </div>
+
+                    <div class="dashboard-title">
+                        Dashboard quản trị hệ thống
+                    </div>
+
+                    <p class="dashboard-subtitle">
+                        Theo dõi tổng quan người dùng, tin đăng, doanh thu VIP và trạng thái kiểm duyệt bằng biểu đồ trực quan.
+                    </p>
+                </div>
+
+                <div class="time-card">
+                    <div class="time-label">Thời gian hiện tại</div>
+                    <div class="time-value">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-label">Người dùng</div>
+                    <div class="stat-value">@Model.TotalUsers</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">📢</div>
+                    <div class="stat-label">Tổng tin đăng</div>
+                    <div class="stat-value">@Model.TotalPosts</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-label">Tin chờ duyệt</div>
+                    <div class="stat-value">@Model.PendingPosts</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-icon">💳</div>
+                    <div class="stat-label">Doanh thu VIP</div>
+                    <div class="stat-value">@Model.TotalVipRevenue.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-layout">
+            <div class="chart-card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Biểu đồ trạng thái tin</div>
+                        <div class="card-subtitle">So sánh số lượng tin theo trạng thái kiểm duyệt.</div>
+                    </div>
+
+                    <div class="chart-total">@Model.TotalPosts tin</div>
+                </div>
+
+                <div class="bar-chart">
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.PendingPosts</div>
+                        <div class="bar" style="height:@BarHeight(Model.PendingPosts, maxPostStatus)"></div>
+                        <div class="bar-label">Chờ duyệt</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.ApprovedPosts</div>
+                        <div class="bar bar-dark" style="height:@BarHeight(Model.ApprovedPosts, maxPostStatus)"></div>
+                        <div class="bar-label">Đã duyệt</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.RejectedPosts</div>
+                        <div class="bar bar-red" style="height:@BarHeight(Model.RejectedPosts, maxPostStatus)"></div>
+                        <div class="bar-label">Từ chối</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.HiddenPosts</div>
+                        <div class="bar bar-gray" style="height:@BarHeight(Model.HiddenPosts, maxPostStatus)"></div>
+                        <div class="bar-label">Đã ẩn</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Biểu đồ dữ liệu hệ thống</div>
+                        <div class="card-subtitle">Tổng hợp các nhóm dữ liệu chính trong website.</div>
+                    </div>
+
+                    <div class="chart-total">Tổng quan</div>
+                </div>
+
+                <div class="bar-chart">
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.TotalUsers</div>
+                        <div class="bar" style="height:@BarHeight(Model.TotalUsers, maxSystem)"></div>
+                        <div class="bar-label">User</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.TotalPosts</div>
+                        <div class="bar bar-dark" style="height:@BarHeight(Model.TotalPosts, maxSystem)"></div>
+                        <div class="bar-label">Tin</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.TotalCategories</div>
+                        <div class="bar" style="height:@BarHeight(Model.TotalCategories, maxSystem)"></div>
+                        <div class="bar-label">Danh mục</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.TotalAreas</div>
+                        <div class="bar bar-gray" style="height:@BarHeight(Model.TotalAreas, maxSystem)"></div>
+                        <div class="bar-label">Khu vực</div>
+                    </div>
+
+                    <div class="bar-item">
+                        <div class="bar-value">@Model.TotalVipOrders</div>
+                        <div class="bar bar-red" style="height:@BarHeight(Model.TotalVipOrders, maxSystem)"></div>
+                        <div class="bar-label">VIP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Truy cập nhanh</div>
+                    <div class="card-subtitle">Các chức năng quản trị thường dùng.</div>
+                </div>
+            </div>
+
+            <div class="quick-grid">
+                <a asp-area="Admin" asp-controller="Posts" asp-action="Index" class="quick-link">
+                    <div class="quick-icon">📢</div>
+                    <div class="quick-title">Duyệt tin đăng</div>
+                    <div class="quick-text">Kiểm tra, duyệt, từ chối hoặc ẩn tin vi phạm.</div>
+                </a>
+
+                <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="quick-link">
+                    <div class="quick-icon">👥</div>
+                    <div class="quick-title">Người dùng</div>
+                    <div class="quick-text">Quản lý tài khoản thường và tài khoản VIP.</div>
+                </a>
+
+                <a asp-area="Admin" asp-controller="Categories" asp-action="Index" class="quick-link">
+                    <div class="quick-icon">📂</div>
+                    <div class="quick-title">Danh mục</div>
+                    <div class="quick-text">Thêm, sửa, xóa các nhóm tin rao vặt.</div>
+                </a>
+
+                <a asp-area="Admin" asp-controller="Areas" asp-action="Index" class="quick-link">
+                    <div class="quick-icon">📍</div>
+                    <div class="quick-title">Khu vực</div>
+                    <div class="quick-text">Quản lý khu vực đăng tin.</div>
+                </a>
+
+                <a asp-area="Admin" asp-controller="VipPackages" asp-action="Index" class="quick-link">
+                    <div class="quick-icon">👑</div>
+                    <div class="quick-title">Gói VIP</div>
+                    <div class="quick-text">Thiết lập giá và thời hạn gói VIP.</div>
+                </a>
+
+                <a asp-area="Admin" asp-controller="VipOrders" asp-action="Index" class="quick-link">
+                    <div class="quick-icon">💳</div>
+                    <div class="quick-title">Đơn VIP</div>
+                    <div class="quick-text">Theo dõi giao dịch và doanh thu VIP.</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="recent-card mt-4">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Tin đăng mới nhất</div>
+                    <div class="card-subtitle">5 tin gần đây nhất trong hệ thống.</div>
+                </div>
+
+                <a asp-area="Admin"
+                   asp-controller="Posts"
+                   asp-action="Index"
+                   class="btn btn-dark rounded-pill fw-bold px-4">
+                    Xem tất cả
+                </a>
+            </div>
+
+            @if (Model.RecentPosts == null || !Model.RecentPosts.Any())
+            {
+                <div class="empty-box">
+                    Chưa có tin đăng nào trong hệ thống.
+                </div>
+            }
+            else
+            {
+                <div class="recent-list">
+                    @foreach (var post in Model.RecentPosts)
+                    {
+                        string badgeClass = "badge-pending";
+                        string statusText = "Chờ duyệt";
+
+                        if (post.Status == PostStatus.Approved)
+                        {
+                            badgeClass = "badge-approved";
+                            statusText = "Đã duyệt";
+                        }
+                        else if (post.Status == PostStatus.Rejected)
+                        {
+                            badgeClass = "badge-rejected";
+                            statusText = "Bị từ chối";
+                        }
+                        else if (post.Status == PostStatus.Hidden)
+                        {
+                            badgeClass = "badge-hidden";
+                            statusText = "Đã ẩn";
+                        }
+
+                        <div class="recent-item">
+                            <div>
+                                <div class="recent-title">
+                                    @post.Title
+                                </div>
+
+                                <div class="recent-meta">
+                                    <span>📂 @(post.Category != null ? post.Category.Name : "Chưa có danh mục")</span>
+                                    <span>📍 @(post.Area != null ? post.Area.Name : "Chưa có khu vực")</span>
+                                    <span>🕒 @post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+
+                            <span class="badge-status @badgeClass">
+                                @statusText
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>

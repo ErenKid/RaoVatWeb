@@ -1,0 +1,461 @@
+@model RaoVatWeb.Models.Area
+
+@{
+    ViewData["Title"] = "Chi tiết khu vực";
+
+    var posts = ViewBag.Posts as List<RaoVatWeb.Models.Post>
+        ?? new List<RaoVatWeb.Models.Post>();
+
+    var childAreas = ViewBag.ChildAreas as List<RaoVatWeb.Models.Area>
+        ?? new List<RaoVatWeb.Models.Area>();
+
+    var parentName = ViewBag.ParentName as string ?? "Không có";
+
+    var approvedCount = posts.Count(x => x.Status == RaoVatWeb.Models.Enums.PostStatus.Approved);
+    var pendingCount = posts.Count(x => x.Status == RaoVatWeb.Models.Enums.PostStatus.Pending);
+}
+
+<style>
+    .area-details-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .area-details-container {
+        max-width: 1260px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 34px 36px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+    }
+
+    .page-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .page-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .page-title {
+        font-size: 42px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: #d1d5db;
+        font-size: 17px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .header-btn {
+        height: 52px;
+        border-radius: 17px;
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .header-btn-dark {
+        background: rgba(255,255,255,0.08);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card,
+    .content-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+    }
+
+    .stat-card {
+        border-radius: 26px;
+        padding: 22px;
+    }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 17px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        color: #111827;
+        font-size: 34px;
+        font-weight: 900;
+    }
+
+    .content-card {
+        border-radius: 30px;
+        padding: 26px;
+        margin-bottom: 24px;
+    }
+
+    .card-title {
+        color: #111827;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+        color: #6b7280;
+        font-size: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .info-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 16px;
+    }
+
+    .info-label {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .info-value {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .badge {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 900;
+        border: 1px solid transparent;
+    }
+
+    .badge-active {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .badge-inactive {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .list-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 1fr 160px;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .item-title {
+        color: #111827;
+        font-size: 19px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .item-meta {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 650;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .item-action {
+        height: 42px;
+        border-radius: 14px;
+        background: #111827;
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 24px;
+        padding: 38px 22px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    @@media (max-width: 900px) {
+        .page-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .stat-grid,
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .list-item {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 620px) {
+        .stat-grid,
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-title {
+            font-size: 32px;
+        }
+
+        .page-header,
+        .content-card {
+            padding: 22px;
+        }
+    }
+</style>
+
+<div class="area-details-page">
+    <div class="area-details-container">
+        <div class="page-header">
+            <div class="page-header-content">
+                <div>
+                    <div class="page-badge">📍 Khu vực</div>
+                    <div class="page-title">@Model.Name</div>
+                    <p class="page-subtitle">Thông tin chi tiết và dữ liệu liên quan đến khu vực.</p>
+                </div>
+
+                <div class="header-actions">
+                    <a asp-area="Admin" asp-controller="Areas" asp-action="Index" class="header-btn header-btn-dark">
+                        ← Quay lại
+                    </a>
+
+                    <a asp-area="Admin" asp-controller="Areas" asp-action="Edit" asp-route-id="@Model.AreaId" class="header-btn">
+                        Sửa khu vực
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📢</div>
+                <div class="stat-label">Tổng tin đăng</div>
+                <div class="stat-value">@posts.Count</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-label">Đã duyệt</div>
+                <div class="stat-value">@approvedCount</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-label">Chờ duyệt</div>
+                <div class="stat-value">@pendingCount</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏙️</div>
+                <div class="stat-label">Khu vực con</div>
+                <div class="stat-value">@childAreas.Count</div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-title">Thông tin khu vực</div>
+            <div class="card-subtitle">Trạng thái và cấp khu vực trong hệ thống.</div>
+
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-label">Mã khu vực</div>
+                    <div class="info-value">#@Model.AreaId</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Cấp cha</div>
+                    <div class="info-value">@parentName</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Ngày tạo</div>
+                    <div class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Trạng thái</div>
+                    <div class="info-value">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge badge-active">Đang hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-inactive">Đã tắt</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-title">Khu vực con</div>
+            <div class="card-subtitle">Các khu vực trực thuộc khu vực này.</div>
+
+            @if (!childAreas.Any())
+            {
+                <div class="empty-box">Không có khu vực con.</div>
+            }
+            else
+            {
+                <div class="list">
+                    @foreach (var item in childAreas)
+                    {
+                        <div class="list-item">
+                            <div>
+                                <div class="item-title">@item.Name</div>
+
+                                <div class="item-meta">
+                                    <span>ID: @item.AreaId</span>
+                                    <span>@(item.IsActive ? "Đang hoạt động" : "Đã tắt")</span>
+                                </div>
+                            </div>
+
+                            <a asp-area="Admin"
+                               asp-controller="Areas"
+                               asp-action="Details"
+                               asp-route-id="@item.AreaId"
+                               class="item-action">
+                                Xem
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="content-card">
+            <div class="card-title">Tin đăng thuộc khu vực</div>
+            <div class="card-subtitle">Các tin đăng đang được gắn với khu vực này.</div>
+
+            @if (!posts.Any())
+            {
+                <div class="empty-box">Chưa có tin đăng thuộc khu vực này.</div>
+            }
+            else
+            {
+                <div class="list">
+                    @foreach (var post in posts)
+                    {
+                        <div class="list-item">
+                            <div>
+                                <div class="item-title">@post.Title</div>
+
+                                <div class="item-meta">
+                                    <span>Giá: @post.Price.ToString("N0") đ</span>
+                                    <span>Danh mục: @(post.Category?.Name ?? "Chưa cập nhật")</span>
+                                    <span>Trạng thái: @post.Status</span>
+                                    <span>Ngày đăng: @post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+
+                            <a asp-area="Admin"
+                               asp-controller="Posts"
+                               asp-action="Details"
+                               asp-route-id="@post.PostId"
+                               class="item-action">
+                                Xem tin
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

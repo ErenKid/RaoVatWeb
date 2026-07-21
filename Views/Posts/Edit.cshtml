@@ -1,142 +1,635 @@
 @model RaoVatWeb.ViewModels.PostEditViewModel
 
 @{
-    ViewData["Title"] = "Sửa tin rao vặt";
+    ViewData["Title"] = "Sửa tin";
+
+    var categories = ViewBag.Categories as List<RaoVatWeb.Models.Category>
+        ?? new List<RaoVatWeb.Models.Category>();
+
+    var areas = ViewBag.Areas as List<RaoVatWeb.Models.Area>
+        ?? new List<RaoVatWeb.Models.Area>();
+
+    var existingImages = ViewBag.ExistingImages as List<RaoVatWeb.Models.PostImage>
+        ?? new List<RaoVatWeb.Models.PostImage>();
 }
 
-<div class="container mt-4">
-    <h2>Sửa tin rao vặt</h2>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    <div class="alert alert-warning">
-        Sau khi chỉnh sửa, tin sẽ được chuyển về trạng thái <strong>Chờ duyệt</strong> để Admin kiểm tra lại.
-    </div>
+    .edit-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 52px;
+    }
 
-    <form asp-controller="Posts"
-          asp-action="Edit"
-          method="post"
-          enctype="multipart/form-data">
+    .edit-container {
+        max-width: 1320px;
+        width: 94vw;
+        margin: 0 auto;
+    }
 
-        @Html.AntiForgeryToken()
+    .edit-hero {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 34px 38px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+        position: relative;
+        overflow: hidden;
+    }
 
-        <input type="hidden" asp-for="PostId" />
+    .edit-hero::after {
+        content: "";
+        position: absolute;
+        right: -60px;
+        bottom: -70px;
+        width: 260px;
+        height: 260px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
 
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    .edit-hero-content {
+        position: relative;
+        z-index: 2;
+    }
 
-        <div class="mb-3">
-            <label asp-for="Title" class="form-label">Tiêu đề tin đăng</label>
-            <input asp-for="Title"
-                   class="form-control"
-                   placeholder="Ví dụ: Bán laptop Dell cũ" />
-            <span asp-validation-for="Title" class="text-danger"></span>
+    .edit-title {
+        font-size: 46px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .edit-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.65;
+        max-width: 850px;
+        margin: 0;
+    }
+
+    .edit-layout {
+        display: grid;
+        grid-template-columns: 1.3fr 0.7fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .form-card,
+    .image-card,
+    .note-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+    }
+
+    .side-stack {
+        display: grid;
+        gap: 20px;
+    }
+
+    .form-title,
+    .side-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .form-subtitle,
+    .side-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        margin-bottom: 24px;
+        line-height: 1.55;
+    }
+
+    .form-label {
+        font-size: 17px;
+        font-weight: 750;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .custom-input,
+    .custom-select,
+    .custom-textarea {
+        border-radius: 17px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 0 16px;
+        width: 100%;
+        outline: none;
+    }
+
+    .custom-input,
+    .custom-select {
+        height: 56px;
+    }
+
+    .custom-textarea {
+        min-height: 190px;
+        padding-top: 14px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .custom-input:focus,
+    .custom-select:focus,
+    .custom-textarea:focus {
+        background: white;
+        border-color: #f2b705;
+        box-shadow: 0 0 0 0.22rem rgba(255,212,59,0.22);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .status-note {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 18px;
+        padding: 15px;
+        font-weight: 700;
+        line-height: 1.55;
+        margin-bottom: 22px;
+    }
+
+    .upload-box {
+        border: 2px dashed #cbd5e1;
+        border-radius: 22px;
+        background: #f8fafc;
+        padding: 22px;
+        text-align: center;
+        transition: 0.18s ease;
+    }
+
+    .upload-box:hover {
+        border-color: #facc15;
+        background: #fffbea;
+    }
+
+    .upload-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        margin-bottom: 12px;
+    }
+
+    .upload-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .upload-note {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 14px;
+    }
+
+    .submit-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+    }
+
+    .btn-submit {
+        height: 56px;
+        border: none;
+        border-radius: 18px;
+        background: #111827;
+        color: white;
+        padding: 0 24px;
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    .btn-submit:hover {
+        background: #000;
+    }
+
+    .btn-back {
+        height: 56px;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #111827;
+        padding: 0 22px;
+        font-size: 17px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .image-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #f9fafb;
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-actions {
+        padding: 10px;
+    }
+
+    .main-image-badge {
+        display: inline-flex;
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 5px 9px;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .btn-delete-image {
+        width: 100%;
+        height: 38px;
+        border: none;
+        border-radius: 12px;
+        background: #ef4444;
+        color: white;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .btn-delete-image:hover {
+        background: #dc2626;
+    }
+
+    .empty-image {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 18px;
+        padding: 28px 16px;
+        text-align: center;
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    .guide-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .guide-item {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 15px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .guide-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: #ffd43b;
+        color: #111827;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .guide-text {
+        color: #374151;
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 600;
+    }
+
+    .text-danger {
+        font-size: 14px;
+        font-weight: 650;
+    }
+
+    @@media (max-width: 1100px) {
+        .edit-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-title {
+            font-size: 38px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .form-grid,
+        .image-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-hero {
+            padding: 28px 24px;
+        }
+
+        .edit-title {
+            font-size: 32px;
+        }
+
+        .form-card,
+        .image-card,
+        .note-card {
+            padding: 22px;
+        }
+    }
+</style>
+
+<div class="edit-page">
+    <div class="edit-container">
+        <div class="edit-hero">
+            <div class="edit-hero-content">
+                <div class="edit-title">
+                    Sửa tin rao vặt
+                </div>
+
+                <p class="edit-subtitle">
+                    Cập nhật lại thông tin tin đăng. Nếu tin đã được duyệt, sau khi chỉnh sửa
+                    hệ thống sẽ chuyển tin về trạng thái chờ duyệt để Admin kiểm tra lại.
+                </p>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="CategoryId" class="form-label">Danh mục</label>
-            <select asp-for="CategoryId"
-                    asp-items="@(ViewBag.Categories as SelectList)"
-                    class="form-select">
-                <option value="">-- Chọn danh mục --</option>
-            </select>
-            <span asp-validation-for="CategoryId" class="text-danger"></span>
-        </div>
+        <div class="edit-layout">
+            <div class="form-card">
+                <div class="form-title">
+                    Thông tin tin đăng
+                </div>
 
-        <div class="mb-3">
-            <label asp-for="AreaId" class="form-label">Khu vực</label>
-            <select asp-for="AreaId"
-                    asp-items="@(ViewBag.Areas as SelectList)"
-                    class="form-select">
-                <option value="">-- Chọn khu vực --</option>
-            </select>
-            <span asp-validation-for="AreaId" class="text-danger"></span>
-        </div>
+                <div class="form-subtitle">
+                    Chỉnh sửa tiêu đề, danh mục, khu vực, giá, mô tả và thêm hình ảnh mới nếu cần.
+                </div>
 
-        <div class="mb-3">
-            <label asp-for="Price" class="form-label">Giá</label>
-            <input asp-for="Price"
-                   type="number"
-                   min="0"
-                   step="1000"
-                   class="form-control"
-                   placeholder="Ví dụ: 8500000" />
-            <span asp-validation-for="Price" class="text-danger"></span>
-        </div>
+                <div class="status-note">
+                    Lưu ý: Tin sau khi sửa có thể cần Admin duyệt lại trước khi hiển thị công khai.
+                </div>
 
-        <div class="mb-3">
-            <label asp-for="Description" class="form-label">Mô tả chi tiết</label>
-            <textarea asp-for="Description"
-                      class="form-control"
-                      rows="5"
-                      placeholder="Mô tả tình trạng sản phẩm, dịch vụ, thông tin giao dịch..."></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+                <form asp-controller="Posts"
+                      asp-action="Edit"
+                      asp-route-id="@Model.PostId"
+                      method="post"
+                      enctype="multipart/form-data"
+                      asp-antiforgery="true">
 
-        @if (Model.ExistingImages != null && Model.ExistingImages.Count > 0)
-{
-    <div class="mb-3">
-        <label class="form-label">Hình ảnh hiện tại</label>
+                    <input type="hidden" asp-for="PostId" />
 
-        <div class="row">
-            @foreach (var image in Model.ExistingImages)
-            {
-                <div class="col-md-3 mb-3">
-                    <div class="position-relative">
-                        <img src="@image.ImageUrl"
-                             class="img-fluid rounded border"
-                             style="height: 160px; width: 100%; object-fit: cover;"
-                             alt="@Model.Title" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                        <button type="submit"
-                                asp-controller="Posts"
-                                asp-action="DeleteImage"
-                                asp-route-imageId="@image.PostImageId"
-                                asp-route-postId="@Model.PostId"
-                                formmethod="post"
-                                formnovalidate
-                                class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
-                                onclick="return confirm('Bạn có chắc muốn xóa ảnh này không?');">
-                            ×
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">
+                            Tiêu đề tin
+                        </label>
+
+                        <input asp-for="Title"
+                               class="custom-input"
+                               placeholder="Nhập tiêu đề tin đăng" />
+
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label">
+                                Danh mục
+                            </label>
+
+                            <select asp-for="CategoryId" class="custom-select">
+                                <option value="">-- Chọn danh mục --</option>
+
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.CategoryId">
+                                        @category.Name
+                                    </option>
+                                }
+                            </select>
+
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AreaId" class="form-label">
+                                Khu vực
+                            </label>
+
+                            <select asp-for="AreaId" class="custom-select">
+                                <option value="">-- Chọn khu vực --</option>
+
+                                @foreach (var area in areas)
+                                {
+                                    <option value="@area.AreaId">
+                                        @area.Name
+                                    </option>
+                                }
+                            </select>
+
+                            <span asp-validation-for="AreaId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Price" class="form-label">
+                            Giá
+                        </label>
+
+                        <input asp-for="Price"
+                               class="custom-input"
+                               placeholder="Ví dụ: 8500000" />
+
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">
+                            Mô tả chi tiết
+                        </label>
+
+                        <textarea asp-for="Description"
+                                  class="custom-textarea"
+                                  placeholder="Nhập mô tả chi tiết cho tin đăng..."></textarea>
+
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Thêm hình ảnh mới
+                        </label>
+
+                        <div class="upload-box">
+                            <div class="upload-icon">
+                                📷
+                            </div>
+
+                            <div class="upload-title">
+                                Tải thêm hình ảnh
+                            </div>
+
+                            <div class="upload-note">
+                                Ảnh mới sẽ được thêm vào danh sách ảnh hiện tại của tin đăng.
+                            </div>
+
+                            <input type="file"
+                                   name="images"
+                                   class="form-control"
+                                   accept="image/*"
+                                   multiple />
+                        </div>
+                    </div>
+
+                    <div class="submit-row">
+                        <button type="submit" class="btn-submit">
+                            Lưu thay đổi
                         </button>
+
+                        <a asp-controller="Posts"
+                           asp-action="MyPosts"
+                           class="btn-back">
+                            Quay lại Tin của tôi
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="side-stack">
+                <div class="image-card">
+                    <div class="side-title">
+                        Hình ảnh hiện tại
+                    </div>
+
+                    <div class="side-subtitle">
+                        Danh sách hình ảnh đang được lưu cho tin đăng này.
+                    </div>
+
+                    @if (existingImages.Any())
+                    {
+                        <div class="image-grid">
+                            @foreach (var image in existingImages)
+                            {
+                                <div class="image-item">
+                                    <img src="@image.ImageUrl" alt="@Model.Title" />
+
+                                    <div class="image-actions">
+                                        @if (image.IsMainImage)
+                                        {
+                                            <div class="main-image-badge">
+                                                Ảnh chính
+                                            </div>
+                                        }
+
+                                        <form asp-controller="Posts"
+                                              asp-action="DeleteImage"
+                                              asp-route-imageId="@image.PostImageId"
+                                              asp-route-postId="@Model.PostId"
+                                              method="post"
+                                              asp-antiforgery="true">
+
+                                            <button type="submit"
+                                                    class="btn-delete-image"
+                                                    onclick="return confirm('Bạn có chắc muốn xóa ảnh này không?');">
+                                                Xóa ảnh
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-image">
+                            Tin này chưa có hình ảnh nào.
+                        </div>
+                    }
+                </div>
+
+                <div class="note-card">
+                    <div class="side-title">
+                        Gợi ý chỉnh sửa
+                    </div>
+
+                    <div class="side-subtitle">
+                        Một số lưu ý giúp tin đăng rõ ràng và dễ được duyệt hơn.
+                    </div>
+
+                    <div class="guide-list">
+                        <div class="guide-item">
+                            <div class="guide-icon">1</div>
+                            <div class="guide-text">
+                                Không ghi thông tin sai lệch hoặc nội dung gây hiểu nhầm.
+                            </div>
+                        </div>
+
+                        <div class="guide-item">
+                            <div class="guide-icon">2</div>
+                            <div class="guide-text">
+                                Cập nhật giá và khu vực chính xác để người mua dễ liên hệ.
+                            </div>
+                        </div>
+
+                        <div class="guide-item">
+                            <div class="guide-icon">3</div>
+                            <div class="guide-text">
+                                Nếu thay đổi nội dung quan trọng, tin có thể quay lại trạng thái chờ duyệt.
+                            </div>
+                        </div>
                     </div>
                 </div>
-            }
+            </div>
         </div>
     </div>
-}
-else
-{
-    <div class="alert alert-light">
-        Tin này chưa có hình ảnh.
-    </div>
-}
-
-        <div class="mb-3">
-            <label class="form-label">Thêm hình ảnh mới</label>
-
-            <input name="Images"
-                   type="file"
-                   multiple
-                   accept=".jpg,.jpeg,.png"
-                   class="form-control" />
-
-            <small class="text-muted">
-                Nếu chọn ảnh mới, hệ thống sẽ thêm vào danh sách ảnh hiện tại. Ảnh cũ vẫn được giữ lại.
-            </small>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-            Lưu thay đổi
-        </button>
-
-        <a asp-controller="Posts"
-           asp-action="MyPosts"
-           class="btn btn-secondary">
-            Quay lại Tin của tôi
-        </a>
-    </form>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

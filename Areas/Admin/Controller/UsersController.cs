@@ -12,21 +12,23 @@ namespace RaoVatWeb.Areas.Admin.Controllers
     [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
         public UsersController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContext context)
         {
-            _context = context;
             _userManager = userManager;
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
         {
+            var now = DateTime.Now;
+
             var users = await _userManager.Users
-                .OrderBy(u => u.Email)
+                .OrderByDescending(u => u.CreatedAt)
                 .ToListAsync();
 
             var model = new List<AdminUserViewModel>();
@@ -38,19 +40,30 @@ namespace RaoVatWeb.Areas.Admin.Controllers
                 var postCount = await _context.Posts
                     .CountAsync(p => p.UserId == user.Id);
 
-                var isLocked = user.LockoutEnd.HasValue &&
-                               user.LockoutEnd.Value > DateTimeOffset.UtcNow;
-
                 model.Add(new AdminUserViewModel
                 {
+                    Id = user.Id,
                     UserId = user.Id,
-                    Email = user.Email ?? "",
-                    FullName = user.FullName ?? user.UserName ?? "",
-                    PhoneNumber = user.PhoneNumber ?? "",
-                    Roles = roles.Any() ? string.Join(", ", roles) : "User",
-                    PostCount = postCount,
-                    IsLocked = isLocked,
-                    LockoutEnd = user.LockoutEnd
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+
+                    CreatedAt = user.CreatedAt,
+
+                    IsVip = user.IsVip
+                            && user.VipExpiredAt.HasValue
+                            && user.VipExpiredAt.Value > now,
+
+                    VipExpiredAt = user.VipExpiredAt,
+
+                    IsLocked = user.LockoutEnd.HasValue
+                               && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
+
+                    LockoutEnd = user.LockoutEnd,
+
+                    Roles = string.Join(", ", roles),
+
+                    PostCount = postCount
                 });
             }
 
@@ -61,16 +74,11 @@ namespace RaoVatWeb.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Lock(string id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUserId = _userManager.GetUserId(User);
 
-            if (currentUser == null)
+            if (id == currentUserId)
             {
-                return Challenge();
-            }
-
-            if (currentUser.Id == id)
-            {
-                TempData["Error"] = "Bạn không thể khóa chính tài khoản đang đăng nhập.";
+                TempData["Error"] = "Bạn không thể tự khóa tài khoản Admin đang đăng nhập.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -78,17 +86,14 @@ namespace RaoVatWeb.Areas.Admin.Controllers
 
             if (user == null)
             {
-                return NotFound();
-            }
-
-            if (await _userManager.IsInRoleAsync(user, "Admin"))
-            {
-                TempData["Error"] = "Không nên khóa tài khoản Admin.";
+                TempData["Error"] = "Không tìm thấy người dùng.";
                 return RedirectToAction(nameof(Index));
             }
 
-            await _userManager.SetLockoutEnabledAsync(user, true);
-            await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+
+            await _userManager.UpdateAsync(user);
 
             TempData["Success"] = "Đã khóa tài khoản người dùng.";
             return RedirectToAction(nameof(Index));
@@ -102,10 +107,14 @@ namespace RaoVatWeb.Areas.Admin.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                TempData["Error"] = "Không tìm thấy người dùng.";
+                return RedirectToAction(nameof(Index));
             }
 
-            await _userManager.SetLockoutEndDateAsync(user, null);
+            user.LockoutEnd = null;
+            user.AccessFailedCount = 0;
+
+            await _userManager.UpdateAsync(user);
 
             TempData["Success"] = "Đã mở khóa tài khoản người dùng.";
             return RedirectToAction(nameof(Index));

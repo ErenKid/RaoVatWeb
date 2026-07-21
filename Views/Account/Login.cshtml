@@ -4,82 +4,419 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="container mt-4">
-    <h2>Đăng nhập</h2>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    <form asp-controller="Account" asp-action="Login" method="post">
-        @Html.AntiForgeryToken()
+    .auth-wrapper {
+        max-width: 1500px;
+        width: 94vw;
+        margin: 28px auto 46px;
+        padding: 0 16px;
+    }
 
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    .auth-grid {
+        display: grid;
+        grid-template-columns: 1.12fr 1fr;
+        gap: 34px;
+        align-items: stretch;
+    }
 
-        <div class="mb-3">
-            <label asp-for="Email" class="form-label">Email</label>
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
+    .auth-left {
+        background: linear-gradient(135deg, #f7c62f, #f2b705);
+        color: #0f172a;
+        border-radius: 34px;
+        padding: 52px 48px;
+        min-height: 720px;
+        box-shadow: 0 22px 52px rgba(0,0,0,0.14);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
 
-        <div class="mb-3">
-            <label asp-for="Password" class="form-label">Mật khẩu</label>
-            <input asp-for="Password" class="form-control" />
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
+    .auth-left::after {
+        content: "";
+        position: absolute;
+        right: -55px;
+        bottom: -55px;
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.28);
+    }
 
-        <div class="form-check mb-3">
-            <input asp-for="RememberMe" class="form-check-input" />
-            <label asp-for="RememberMe" class="form-check-label">
-                Ghi nhớ đăng nhập
-            </label>
-        </div>
+    .auth-left::before {
+        content: "";
+        position: absolute;
+        left: -80px;
+        top: -80px;
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.20);
+    }
 
-        <button type="submit" class="btn btn-primary">
-            Đăng nhập
-        </button>
-    </form>
-</div>
-@if (ViewBag.LockedAccount != null)
-{
-    <div class="modal fade" id="lockedAccountModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Tài khoản bị khóa</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    .brand-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        background: rgba(255,255,255,0.32);
+        border: 1px solid rgba(255,255,255,0.42);
+        border-radius: 20px;
+        padding: 12px 18px;
+        width: fit-content;
+        position: relative;
+        z-index: 2;
+    }
+
+    .brand-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #081225;
+        color: #f7c62f;
+        font-weight: 800;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .brand-name {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .auth-left h1 {
+        margin-top: 38px;
+        font-size: 64px;
+        line-height: 1.12;
+        font-weight: 800;
+        letter-spacing: -0.6px;
+        margin-bottom: 22px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .auth-left p {
+        font-size: 20px;
+        line-height: 1.75;
+        color: #374151;
+        max-width: 94%;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    .feature-list {
+        margin-top: 34px;
+        display: grid;
+        gap: 14px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.36);
+        border: 1px solid rgba(255,255,255,0.45);
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .feature-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: #081225;
+        color: #f7c62f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .auth-right {
+        background: #fff;
+        border-radius: 34px;
+        padding: 52px 48px;
+        box-shadow: 0 22px 52px rgba(0,0,0,0.10);
+        border: 1px solid #e5e7eb;
+        min-height: 720px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .auth-title {
+        font-size: 60px;
+        line-height: 1.15;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 12px;
+    }
+
+    .auth-subtitle {
+        font-size: 20px;
+        color: #6b7280;
+        margin-bottom: 34px;
+        line-height: 1.7;
+    }
+
+    .form-label.custom-label {
+        font-weight: 700;
+        font-size: 20px;
+        color: #111827;
+        margin-bottom: 9px;
+    }
+
+    .custom-input {
+        height: 64px;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        padding: 0 18px;
+        font-size: 19px;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input:focus {
+        border-color: #f0c419;
+        box-shadow: 0 0 0 0.22rem rgba(240,196,25,0.18);
+        background: #fff;
+    }
+
+    .remember-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        font-size: 17px;
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .remember-wrap input {
+        width: 18px;
+        height: 18px;
+    }
+
+    .btn-auth {
+        width: 100%;
+        height: 66px;
+        border: none;
+        border-radius: 20px;
+        background: #081225;
+        color: #fff;
+        font-size: 22px;
+        font-weight: 800;
+        margin-top: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-auth:hover {
+        background: #0b1730;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .auth-switch {
+        margin-top: 22px;
+        text-align: center;
+        font-size: 18px;
+        color: #6b7280;
+    }
+
+    .auth-switch a {
+        color: #081225;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .auth-switch a:hover {
+        color: #d39b00;
+    }
+
+    .text-danger {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .validation-summary-errors {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-radius: 16px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        font-weight: 650;
+    }
+
+    .validation-summary-errors ul {
+        margin-bottom: 0;
+        padding-left: 18px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .auth-wrapper {
+            width: 96vw;
+            margin-top: 18px;
+        }
+
+        .auth-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .auth-left,
+        .auth-right {
+            min-height: auto;
+            padding: 34px 26px;
+            border-radius: 26px;
+        }
+
+        .auth-left h1 {
+            font-size: 42px;
+        }
+
+        .auth-title {
+            font-size: 40px;
+        }
+
+        .auth-subtitle,
+        .auth-left p {
+            font-size: 17px;
+        }
+
+        .feature-item {
+            font-size: 17px;
+        }
+
+        .custom-input {
+            height: 56px;
+            font-size: 16px;
+        }
+
+        .btn-auth {
+            height: 58px;
+            font-size: 19px;
+        }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-grid">
+        <div class="auth-left">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-badge">RV</div>
+                    <div class="brand-name">RaoVatWeb</div>
                 </div>
 
-                <div class="modal-body">
-                    <p class="mb-0">
-                        @ViewBag.LockedAccount
-                    </p>
+                <h1>Đăng nhập để quản lý tin rao của bạn</h1>
+
+                <p>
+                    Thành viên có thể đăng tin, chỉnh sửa tin, quản lý tin cá nhân,
+                    nhắn tin với người đăng và nâng cấp VIP để tin được ưu tiên hiển thị.
+                </p>
+            </div>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Đăng tin mua bán, cho thuê, dịch vụ, việc làm</span>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
-                        Đóng
-                    </button>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Quản lý trạng thái tin: chờ duyệt, đã duyệt, đã ẩn</span>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Nâng cấp VIP để tin nổi bật hơn</span>
                 </div>
             </div>
         </div>
+
+        <div class="auth-right">
+            <div class="auth-title">
+                Đăng nhập
+            </div>
+
+            <div class="auth-subtitle">
+                Nhập tài khoản đã đăng ký để tiếp tục sử dụng hệ thống RaoVatWeb.
+            </div>
+
+            <form asp-controller="Account"
+                  asp-action="Login"
+                  method="post"
+                  asp-antiforgery="true">
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-4">
+                    <label asp-for="Email" class="form-label custom-label">
+                        Email
+                    </label>
+
+                    <input asp-for="Email"
+                           class="form-control custom-input"
+                           placeholder="Nhập email đăng nhập" />
+
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Password" class="form-label custom-label">
+                        Mật khẩu
+                    </label>
+
+                    <input asp-for="Password"
+                           type="password"
+                           class="form-control custom-input"
+                           placeholder="Nhập mật khẩu" />
+
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="remember-wrap">
+                    <input asp-for="RememberMe"
+                           class="form-check-input" />
+
+                    <label asp-for="RememberMe"
+                           class="form-check-label">
+                        Ghi nhớ đăng nhập
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-auth">
+                    Đăng nhập
+                </button>
+
+                <div class="auth-switch">
+                    Chưa có tài khoản?
+                    <a asp-controller="Account"
+                       asp-action="Register">
+                        Đăng ký ngay
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-}
-}
+</div>
+
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
-    @if (ViewBag.LockedAccount != null)
-    {
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                var modalElement = document.getElementById("lockedAccountModal");
-
-                if (modalElement) {
-                    var modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                }
-            });
-        </script>
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

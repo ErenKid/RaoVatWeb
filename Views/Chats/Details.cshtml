@@ -1,83 +1,473 @@
 @model RaoVatWeb.ViewModels.ChatDetailViewModel
 
 @{
-    ViewData["Title"] = "Chat";
+    ViewData["Title"] = "Chi tiết tin nhắn";
+
+    var messages = Model.Messages != null
+        ? Model.Messages.OrderBy(x => x.CreatedAt).ToList()
+        : new List<RaoVatWeb.Models.ChatMessage>();
+
+    var otherUserName = !string.IsNullOrWhiteSpace(Model.OtherUserName)
+        ? Model.OtherUserName
+        : "Người dùng";
+
+    var avatarText = otherUserName.Substring(0, 1).ToUpper();
 }
 
-<div class="container mt-4">
-    <a asp-controller="Chats"
-       asp-action="Index"
-       class="btn btn-secondary mb-3">
-        Quay lại tin nhắn
-    </a>
+<style>
+    .chat-detail-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    <div class="card">
-        <div class="card-header">
-            <strong>@Model.PartnerName</strong>
-            <div class="text-muted small">
-                Tin rao: @Model.PostTitle
+    .chat-detail-container {
+        max-width: 1100px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .detail-header {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 30px 34px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .detail-header::after {
+        content: "";
+        position: absolute;
+        right: -90px;
+        bottom: -110px;
+        width: 300px;
+        height: 300px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .chat-avatar {
+        width: 68px;
+        height: 68px;
+        border-radius: 24px;
+        background: #ffd43b;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 950;
+        flex-shrink: 0;
+    }
+
+    .header-title {
+        color: white;
+        font-size: 30px;
+        font-weight: 950;
+        margin-bottom: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header-subtitle {
+        color: #d1d5db;
+        font-size: 15px;
+        font-weight: 650;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .header-btn {
+        height: 48px;
+        border-radius: 16px;
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .header-btn:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .header-btn-dark {
+        background: rgba(255,255,255,0.08);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .header-btn-dark:hover {
+        background: rgba(255,255,255,0.14);
+        color: white;
+    }
+
+    .chat-box {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.08);
+        overflow: hidden;
+    }
+
+    .chat-info {
+        padding: 18px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fffbea;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .info-title {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 950;
+        margin-bottom: 4px;
+    }
+
+    .info-subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .message-area {
+        min-height: 430px;
+        max-height: 580px;
+        overflow-y: auto;
+        padding: 24px;
+        background: linear-gradient(180deg, #f8fafc, #ffffff);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .message-row {
+        display: flex;
+        width: 100%;
+    }
+
+    .message-row.mine {
+        justify-content: flex-end;
+    }
+
+    .message-row.other {
+        justify-content: flex-start;
+    }
+
+    .message-bubble {
+        max-width: 68%;
+        border-radius: 22px;
+        padding: 13px 16px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.07);
+    }
+
+    .message-row.mine .message-bubble {
+        background: #111827;
+        color: white;
+        border-bottom-right-radius: 8px;
+    }
+
+    .message-row.other .message-bubble {
+        background: white;
+        color: #111827;
+        border: 1px solid #e5e7eb;
+        border-bottom-left-radius: 8px;
+    }
+
+    .message-sender {
+        font-size: 13px;
+        font-weight: 900;
+        margin-bottom: 5px;
+        opacity: 0.85;
+    }
+
+    .message-content {
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 650;
+        word-break: break-word;
+        white-space: pre-wrap;
+    }
+
+    .message-time {
+        font-size: 12px;
+        font-weight: 700;
+        opacity: 0.72;
+        margin-top: 7px;
+        text-align: right;
+    }
+
+    .empty-chat {
+        height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .empty-chat-inner {
+        color: #6b7280;
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    .empty-chat-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 26px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        margin: 0 auto 16px;
+    }
+
+    .send-area {
+        padding: 18px 20px;
+        border-top: 1px solid #e5e7eb;
+        background: white;
+    }
+
+    .send-form {
+        display: grid;
+        grid-template-columns: 1fr 130px;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .message-input {
+        width: 100%;
+        min-height: 56px;
+        max-height: 140px;
+        resize: vertical;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        padding: 15px 16px;
+        color: #111827;
+        font-size: 15px;
+        font-weight: 650;
+        outline: none;
+    }
+
+    .message-input:focus {
+        background: white;
+        border-color: #f2b705;
+        box-shadow: 0 0 0 0.22rem rgba(255,212,59,0.22);
+    }
+
+    .send-btn {
+        height: 56px;
+        border: none;
+        border-radius: 18px;
+        background: #2563eb;
+        color: white;
+        font-size: 15px;
+        font-weight: 950;
+        box-shadow: 0 10px 20px rgba(37,99,235,0.22);
+    }
+
+    .send-btn:hover {
+        background: #1d4ed8;
+    }
+
+    @@media (max-width: 760px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-actions {
+            justify-content: flex-start;
+        }
+
+        .chat-info {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 88%;
+        }
+
+        .send-form {
+            grid-template-columns: 1fr;
+        }
+
+        .send-btn {
+            width: 100%;
+        }
+
+        .detail-header,
+        .message-area {
+            padding: 22px;
+        }
+    }
+</style>
+
+<div class="chat-detail-page">
+    <div class="chat-detail-container">
+        <div class="detail-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="chat-avatar">
+                        @avatarText
+                    </div>
+
+                    <div style="min-width: 0;">
+                        <div class="header-title">
+                            @otherUserName
+                        </div>
+
+                        <div class="header-subtitle">
+                            Tin rao: @Model.PostTitle
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <a asp-controller="Chats"
+                       asp-action="Index"
+                       class="header-btn header-btn-dark">
+                        ← Tin nhắn
+                    </a>
+
+                    <a asp-controller="Posts"
+                       asp-action="Details"
+                       asp-route-id="@Model.PostId"
+                       class="header-btn">
+                        Xem tin
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="card-body" style="min-height: 400px;">
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger">
-                    @TempData["Error"]
-                </div>
-            }
+        <div class="chat-box">
+            <div class="chat-info">
+                <div>
+                    <div class="info-title">
+                        Cuộc trò chuyện
+                    </div>
 
-            @if (Model.Messages.Count == 0)
-            {
-                <div class="text-muted">
-                    Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.
+                    <div class="info-subtitle">
+                        Trao đổi trực tiếp với người dùng liên quan đến tin rao này.
+                    </div>
                 </div>
-            }
-            else
-            {
-                foreach (var message in Model.Messages)
+
+                <div class="info-subtitle">
+                    @messages.Count tin nhắn
+                </div>
+            </div>
+
+            <div class="message-area" id="messageArea">
+                @if (!messages.Any())
                 {
-                    var isMine = message.SenderId == Model.CurrentUserId;
-                    var alignClass = isMine ? "text-end" : "text-start";
-                    var bubbleStyle = isMine ? "background-color:#d1e7dd;" : "background-color:#f8f9fa;";
-
-                    <div class="mb-3 @alignClass">
-                        <div class="d-inline-block p-2 rounded border"
-                             style="max-width: 70%; @bubbleStyle">
-                            <div>
-                                @message.Content
-                            </div>
-
-                            <div class="small text-muted mt-1">
-                                @message.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                            </div>
+                    <div class="empty-chat">
+                        <div class="empty-chat-inner">
+                            <div class="empty-chat-icon">💬</div>
+                            Chưa có tin nhắn nào. Hãy gửi tin nhắn đầu tiên.
                         </div>
                     </div>
                 }
-            }
-        </div>
+                else
+                {
+                    @foreach (var message in messages)
+                    {
+                        var isMine = message.SenderId == Model.CurrentUserId;
 
-        <div class="card-footer">
-            <form asp-controller="Chats"
-                  asp-action="Send"
-                  method="post">
+                        var senderName = isMine ? "Bạn" : otherUserName;
 
-                @Html.AntiForgeryToken()
+                        <div class="message-row @(isMine ? "mine" : "other")">
+                            <div class="message-bubble">
+                                <div class="message-sender">
+                                    @(isMine ? "Bạn" : senderName)
+                                </div>
 
-                <input type="hidden"
-                       name="conversationId"
-                       value="@Model.ConversationId" />
+                                <div class="message-content">
+                                    @message.Content
+                                </div>
 
-                <div class="input-group">
-                    <input name="content"
-                           class="form-control"
-                           placeholder="Nhập tin nhắn..." />
+                                <div class="message-time">
+                                    @message.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
 
-                    <button type="submit" class="btn btn-primary">
+            <div class="send-area">
+                <form asp-controller="Chats"
+                      asp-action="Send"
+                      asp-route-id="@Model.ConversationId"
+                      method="post"
+                      asp-antiforgery="true"
+                      class="send-form">
+
+                    <textarea name="messageContent"
+                              class="message-input"
+                              placeholder="Nhập tin nhắn..."
+                              required></textarea>
+
+                    <button type="submit" class="send-btn">
                         Gửi
                     </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const messageArea = document.getElementById("messageArea");
+
+        if (messageArea) {
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+    </script>
+}

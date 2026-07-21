@@ -3,140 +3,620 @@
 
 @{
     ViewData["Title"] = "Tin của tôi";
+
+    var posts = Model != null
+        ? Model.ToList()
+        : new List<RaoVatWeb.Models.Post>();
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Tin của tôi</h2>
-        <div>
-    <a asp-controller="Chats"
-       asp-action="Index"
-       class="btn btn-outline-primary">
-        Tin nhắn
-    </a>
-
-    <a asp-controller="Posts"
-       asp-action="Create"
-       class="btn btn-primary">
-        + Đăng tin mới
-    </a>
-    </div>
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            Bạn chưa có tin đăng nào.
-        </div>
+    .myposts-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 50px;
     }
-    else
-    {
-        <table class="table table-bordered table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Tiêu đề</th>
-                    <th>Danh mục</th>
-                    <th>Khu vực</th>
-                    <th>Giá</th>
-                    <th>Trạng thái</th>
-                    <th>Ngày đăng</th>
-                    <th style="width: 260px;">Thao tác</th>
-                </tr>
-            </thead>
 
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.Title</td>
+    .myposts-container {
+        max-width: 1320px;
+        width: 94vw;
+        margin: 0 auto;
+    }
 
-                        <td>
-                            @(item.Category != null ? item.Category.Name : "Chưa có")
-                        </td>
+    .myposts-hero {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 34px 36px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+        position: relative;
+        overflow: hidden;
+    }
 
-                        <td>
-                            @(item.Area != null ? item.Area.Name : "Chưa có")
-                        </td>
+    .myposts-hero::after {
+        content: "";
+        position: absolute;
+        right: -60px;
+        bottom: -70px;
+        width: 260px;
+        height: 260px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
 
-                        <td>
-                            @string.Format("{0:N0} VNĐ", item.Price)
-                        </td>
+    .myposts-hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: center;
+    }
 
-                        <td>
-                            @if (item.Status == PostStatus.Pending)
-                            {
-                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
-                            }
-                            else if (item.Status == PostStatus.Approved)
-                            {
-                                <span class="badge bg-success">Đã duyệt</span>
-                            }
-                            else if (item.Status == PostStatus.Rejected)
-                            {
-                                <span class="badge bg-danger">Bị từ chối</span>
-                            }
-                            else if (item.Status == PostStatus.Hidden)
-                            {
-                                <span class="badge bg-secondary">Đã ẩn</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">@item.Status</span>
-                            }
-                        </td>
+    .myposts-title {
+        font-size: 46px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
 
-                        <td>
-                            @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                        </td>
+    .myposts-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.65;
+        max-width: 760px;
+        margin: 0;
+    }
 
-                        <td>
-                            <a asp-controller="Posts"
-                               asp-action="Edit"
-                               asp-route-id="@item.PostId"
-                               class="btn btn-sm btn-warning">
-                                Sửa
-                            </a>
+    .create-btn {
+        background: #ffd43b;
+        color: #111827;
+        border-radius: 18px;
+        padding: 14px 22px;
+        font-size: 17px;
+        font-weight: 800;
+        text-decoration: none;
+        white-space: nowrap;
+        border: 1px solid #f2b705;
+    }
 
-                            @if (item.Status != PostStatus.Hidden)
-                            {
+    .create-btn:hover {
+        background: #facc15;
+        color: #111827;
+        transform: translateY(-1px);
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 34px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .list-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+    }
+
+    .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .list-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .list-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+    }
+
+    .post-count {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .mypost-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .mypost-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        background: #fff;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        transition: 0.18s ease;
+    }
+
+    .mypost-item:hover {
+        box-shadow: 0 16px 34px rgba(15,23,42,0.09);
+        transform: translateY(-2px);
+    }
+
+    .post-main {
+        min-width: 0;
+    }
+
+    .post-top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .vip-badge {
+        background: #ef4444;
+        color: white;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .status-badge {
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: 12px;
+        font-weight: 800;
+        border: 1px solid transparent;
+    }
+
+    .status-pending {
+        background: #fff7ed;
+        color: #9a3412;
+        border-color: #fed7aa;
+    }
+
+    .status-approved {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .status-rejected {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .status-hidden {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .mypost-title {
+        font-size: 23px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.35;
+        margin-bottom: 10px;
+    }
+
+    .mypost-price {
+        color: #ef4444;
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .mypost-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .mypost-note {
+        margin-top: 12px;
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.55;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 12px 14px;
+    }
+
+    .action-box {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 170px;
+    }
+
+    .action-link,
+    .action-btn {
+        height: 42px;
+        border-radius: 14px;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-detail {
+        background: #f3f4f6;
+        color: #111827;
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-detail:hover {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .btn-edit {
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+    }
+
+    .btn-edit:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .btn-hide {
+        background: #111827;
+        color: white;
+    }
+
+    .btn-hide:hover {
+        background: #000;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 22px;
+        padding: 44px 24px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .empty-box strong {
+        color: #111827;
+        font-size: 22px;
+    }
+
+    .empty-box a {
+        margin-top: 18px;
+        display: inline-flex;
+        background: #111827;
+        color: white;
+        border-radius: 16px;
+        padding: 12px 18px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    @@media (max-width: 1100px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .myposts-title {
+            font-size: 38px;
+        }
+
+        .myposts-hero-content {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .mypost-item {
+            grid-template-columns: 1fr;
+        }
+
+        .action-box {
+            min-width: unset;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .list-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @@media (max-width: 520px) {
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-box {
+            grid-template-columns: 1fr;
+        }
+
+        .myposts-title {
+            font-size: 31px;
+        }
+    }
+</style>
+
+<div class="myposts-page">
+    <div class="myposts-container">
+        <div class="myposts-hero">
+            <div class="myposts-hero-content">
+                <div>
+                    <div class="myposts-title">
+                        Tin của tôi
+                    </div>
+
+                    <p class="myposts-subtitle">
+                        Quản lý các tin rao bạn đã đăng, theo dõi trạng thái duyệt,
+                        chỉnh sửa nội dung hoặc ẩn tin khi không còn nhu cầu hiển thị.
+                    </p>
+                </div>
+
+                <a asp-controller="Posts"
+                   asp-action="Create"
+                   class="create-btn">
+                    + Đăng tin mới
+                </a>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">Tổng tin</div>
+                <div class="stat-value">@posts.Count</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Chờ duyệt</div>
+                <div class="stat-value">@posts.Count(x => x.Status == PostStatus.Pending)</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Đã duyệt</div>
+                <div class="stat-value">@posts.Count(x => x.Status == PostStatus.Approved)</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Đã ẩn</div>
+                <div class="stat-value">@posts.Count(x => x.Status == PostStatus.Hidden)</div>
+            </div>
+        </div>
+
+        <div class="list-card">
+            <div class="list-header">
+                <div>
+                    <div class="list-title">
+                        Danh sách tin đã đăng
+                    </div>
+
+                    <div class="list-subtitle">
+                        Tin mới đăng hoặc tin vừa sửa sẽ cần Admin duyệt trước khi hiển thị công khai.
+                    </div>
+                </div>
+
+                <div class="post-count">
+                    @posts.Count tin đăng
+                </div>
+            </div>
+
+            @if (!posts.Any())
+            {
+                <div class="empty-box">
+                    <strong>Bạn chưa có tin đăng nào.</strong>
+                    <br />
+                    Hãy đăng tin đầu tiên để bắt đầu sử dụng hệ thống.
+                    <br />
+
+                    <a asp-controller="Posts"
+                       asp-action="Create">
+                        + Đăng tin ngay
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="mypost-list">
+                    @foreach (var post in posts)
+                    {
+                        string statusClass = "status-pending";
+                        string statusText = "Chờ duyệt";
+
+                        if (post.Status == PostStatus.Approved)
+                        {
+                            statusClass = "status-approved";
+                            statusText = "Đã duyệt";
+                        }
+                        else if (post.Status == PostStatus.Rejected)
+                        {
+                            statusClass = "status-rejected";
+                            statusText = "Bị từ chối";
+                        }
+                        else if (post.Status == PostStatus.Hidden)
+                        {
+                            statusClass = "status-hidden";
+                            statusText = "Đã ẩn";
+                        }
+
+                        <div class="mypost-item">
+                            <div class="post-main">
+                                <div class="post-top">
+                                    <span class="status-badge @statusClass">
+                                        @statusText
+                                    </span>
+
+                                    @if (post.IsVipPriority)
+                                    {
+                                        <span class="vip-badge">
+                                            VIP nổi bật
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="mypost-title">
+                                    @post.Title
+                                </div>
+
+                                <div class="mypost-price">
+                                    @post.Price.ToString("N0") đ
+                                </div>
+
+                                <div class="mypost-meta">
+                                    <span>
+                                        📂 @(post.Category != null ? post.Category.Name : "Chưa có danh mục")
+                                    </span>
+
+                                    <span>
+                                        📍 @(post.Area != null ? post.Area.Name : "Chưa có khu vực")
+                                    </span>
+
+                                    <span>
+                                        👁 @post.ViewCount lượt xem
+                                    </span>
+
+                                    <span>
+                                        🕒 @post.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </div>
+
+                                @if (post.Status == PostStatus.Pending)
+                                {
+                                    <div class="mypost-note">
+                                        Tin đang chờ Admin duyệt. Sau khi được duyệt, tin sẽ hiển thị công khai cho khách và người dùng khác.
+                                    </div>
+                                }
+                                else if (post.Status == PostStatus.Rejected)
+                                {
+                                    <div class="mypost-note">
+                                        Tin đã bị từ chối. Bạn có thể chỉnh sửa lại nội dung rồi gửi lại để Admin duyệt.
+                                    </div>
+                                }
+                                else if (post.Status == PostStatus.Hidden)
+                                {
+                                    <div class="mypost-note">
+                                        Tin hiện đang được ẩn và không hiển thị công khai trên hệ thống.
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="action-box">
+                                @if (post.Status == PostStatus.Approved)
+                                {
+                                    <a asp-controller="Posts"
+                                       asp-action="Details"
+                                       asp-route-id="@post.PostId"
+                                       class="action-link btn-detail">
+                                        Xem chi tiết
+                                    </a>
+                                }
+
+                                <a asp-controller="Posts"
+                                   asp-action="Edit"
+                                   asp-route-id="@post.PostId"
+                                   class="action-link btn-edit">
+                                    Sửa tin
+                                </a>
+
+                                @if (post.Status != PostStatus.Hidden)
+                                {
+                                    <form asp-controller="Posts"
+                                          asp-action="Hide"
+                                          asp-route-id="@post.PostId"
+                                          method="post"
+                                          asp-antiforgery="true">
+                                        <button type="submit"
+                                                class="action-btn btn-hide"
+                                                onclick="return confirm('Bạn có chắc muốn ẩn tin này không?');">
+                                            Ẩn tin
+                                        </button>
+                                    </form>
+                                }
+
                                 <form asp-controller="Posts"
-                                      asp-action="Hide"
-                                      asp-route-id="@item.PostId"
+                                      asp-action="Delete"
+                                      asp-route-id="@post.PostId"
                                       method="post"
-                                      class="d-inline">
-                                    @Html.AntiForgeryToken()
-
+                                      asp-antiforgery="true">
                                     <button type="submit"
-                                            class="btn btn-sm btn-secondary"
-                                            onclick="return confirm('Bạn có chắc muốn ẩn tin này không?');">
-                                        Ẩn
+                                            class="action-btn btn-delete"
+                                            onclick="return confirm('Bạn có chắc muốn xóa tin này không?');">
+                                        Xóa tin
                                     </button>
                                 </form>
-                            }
-
-                            <form asp-controller="Posts"
-                                  asp-action="Delete"
-                                  asp-route-id="@item.PostId"
-                                  method="post"
-                                  class="d-inline">
-                                @Html.AntiForgeryToken()
-
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Bạn có chắc muốn xóa tin này không?');">
-                                    Xóa
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>

@@ -1,31 +1,332 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+* {
+    box-sizing: border-box;
 }
 
 body {
-  margin-bottom: 60px;
+    margin: 0;
+    background: #f5f6f8;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #111827;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+a {
+    text-decoration: none;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+a:hover {
+    text-decoration: none;
+}
+
+.rv-navbar {
+    background: #ffd43b;
+    border-bottom: 1px solid #f2b705;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    min-height: 64px;
+}
+
+.rv-brand {
+    font-weight: 950;
+    color: #111827 !important;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+}
+
+.rv-brand-badge {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: #111827;
+    color: #ffd43b;
+    align-items: center;
+    justify-content: center;
+    font-weight: 950;
+    margin-right: 8px;
+}
+
+.rv-nav-link {
+    color: #111827 !important;
+    font-weight: 750;
+    border-radius: 999px;
+    padding: 9px 13px !important;
+    margin: 0 2px;
+}
+
+.rv-nav-link:hover {
+    background: rgba(255,255,255,0.65);
+}
+
+.rv-post-btn {
+    background: #111827;
+    color: white !important;
+    border-radius: 999px;
+    padding: 9px 16px !important;
+    font-weight: 900;
+}
+
+.rv-post-btn:hover {
+    background: #000;
+    color: white !important;
+}
+
+.rv-logout-btn {
+    border: none;
+    background: transparent;
+    color: #111827;
+    font-weight: 750;
+    border-radius: 999px;
+    padding: 9px 13px;
+}
+
+.rv-logout-btn:hover {
+    background: rgba(255,255,255,0.65);
+}
+
+.rv-main {
+    min-height: calc(100vh - 130px);
+    padding-top: 24px;
+    padding-bottom: 40px;
+}
+
+.rv-footer {
+    background: #111827;
+    color: #d1d5db;
+    padding: 22px 0;
+    font-size: 14px;
+}
+
+.rv-footer strong {
+    color: #ffd43b;
+}
+
+/* Card dùng chung */
+.rv-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+    padding: 22px;
+}
+
+.rv-card-title {
+    font-size: 24px;
+    font-weight: 950;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.rv-card-subtitle {
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* Button dùng chung */
+.btn-rv-dark,
+.rv-btn-dark {
+    background: #111827;
+    color: white !important;
+    border: none;
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-weight: 900;
+}
+
+.btn-rv-dark:hover,
+.rv-btn-dark:hover {
+    background: #000;
+    color: white !important;
+}
+
+.btn-rv-yellow,
+.rv-btn-yellow {
+    background: #ffd43b;
+    color: #111827 !important;
+    border: 1px solid #f2b705;
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-weight: 900;
+}
+
+.btn-rv-yellow:hover,
+.rv-btn-yellow:hover {
+    background: #facc15;
+    color: #111827 !important;
+}
+
+.btn-rv-outline,
+.rv-btn-outline {
+    background: white;
+    color: #111827 !important;
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-weight: 850;
+}
+
+.btn-rv-outline:hover,
+.rv-btn-outline:hover {
+    background: #f3f4f6;
+}
+
+/* Form dùng chung */
+.form-control,
+.form-select {
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #f2b705;
+    box-shadow: 0 0 0 0.2rem rgba(255,212,59,0.25);
+}
+
+label {
+    font-weight: 750;
+    color: #111827;
+}
+
+/* Badge trạng thái */
+.rv-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.rv-badge-pending {
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+}
+
+.rv-badge-approved {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.rv-badge-rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.rv-badge-hidden {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.rv-badge-vip {
+    background: #ef4444;
+    color: white;
+    border: none;
+}
+
+/* Table dùng chung */
+.rv-table-wrap {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+}
+
+.rv-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.rv-table th {
+    background: #111827;
+    color: white;
+    font-weight: 850;
+    padding: 14px;
+}
+
+.rv-table td {
+    padding: 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Admin chung */
+.admin-page,
+.rv-admin-page {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.admin-header,
+.rv-admin-header {
+    background: #111827;
+    color: white;
+    border-radius: 22px;
+    padding: 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+}
+
+.admin-title,
+.rv-admin-title {
+    font-size: 28px;
+    font-weight: 950;
+    margin-bottom: 6px;
+}
+
+.admin-subtitle,
+.rv-admin-subtitle {
+    color: #d1d5db;
+    font-size: 15px;
+}
+
+/* Empty box */
+.rv-empty-box {
+    background: #f9fafb;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    color: #6b7280;
+    font-weight: 750;
+}
+
+/* Alert bo góc đẹp */
+.alert {
+    border-radius: 14px;
+    font-weight: 650;
+}
+
+/* Mobile */
+@media (max-width: 991.98px) {
+    .rv-nav-link,
+    .rv-post-btn,
+    .rv-logout-btn {
+        margin-top: 6px;
+        display: inline-block;
+    }
+
+    .rv-main {
+        padding-top: 18px;
+    }
+
+    .rv-card {
+        padding: 18px;
+    }
 }

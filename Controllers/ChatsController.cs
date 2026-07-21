@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaoVatWeb.Data;
 using RaoVatWeb.Models;
-using RaoVatWeb.Models.Enums;
 using RaoVatWeb.ViewModels;
 
 namespace RaoVatWeb.Controllers
@@ -25,142 +24,102 @@ namespace RaoVatWeb.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUserId = _userManager.GetUserId(User);
 
-            if (currentUser == null)
+            if (string.IsNullOrEmpty(currentUserId))
             {
                 return Challenge();
             }
 
-            var conversations = await _context.Conversations
+            var conversations = await _context.Set<Conversation>()
                 .Include(c => c.Post)
-                .Include(c => c.Messages)
-                .Where(c => c.BuyerId == currentUser.Id || c.SellerId == currentUser.Id)
+                .Include(c => c.Buyer)
+                .Include(c => c.Seller)
+                .Where(c => c.BuyerId == currentUserId || c.SellerId == currentUserId)
                 .OrderByDescending(c => c.UpdatedAt)
                 .ToListAsync();
 
-            var model = new List<ChatInboxItemViewModel>();
-
-            foreach (var conversation in conversations)
+            var model = conversations.Select(c =>
             {
-                var partnerId = conversation.BuyerId == currentUser.Id
-                    ? conversation.SellerId
-                    : conversation.BuyerId;
+                var otherUser = c.BuyerId == currentUserId
+                    ? c.Seller
+                    : c.Buyer;
 
-                var partner = await _userManager.FindByIdAsync(partnerId);
+                var otherUserId = c.BuyerId == currentUserId
+                    ? c.SellerId
+                    : c.BuyerId;
 
-                var lastMessage = conversation.Messages
-                    .OrderByDescending(m => m.CreatedAt)
-                    .FirstOrDefault();
+                var otherUserName = otherUser != null && !string.IsNullOrWhiteSpace(otherUser.FullName)
+                    ? otherUser.FullName
+                    : otherUser?.Email ?? "Người dùng";
 
-                model.Add(new ChatInboxItemViewModel
+                return new ChatInboxItemViewModel
                 {
-                    ConversationId = conversation.ConversationId,
-                    PostTitle = conversation.Post != null ? conversation.Post.Title : "Tin đã bị xóa",
-                    PartnerName = partner?.FullName ?? partner?.UserName ?? "Người dùng",
-                    LastMessage = lastMessage != null ? lastMessage.Content : "Chưa có tin nhắn",
-                    UpdatedAt = conversation.UpdatedAt
-                });
-            }
+                    ConversationId = c.ConversationId,
+                    PostId = c.PostId,
+                    PostTitle = c.Post != null ? c.Post.Title : "Tin đã bị xóa",
+                    OtherUserId = otherUserId,
+                    OtherUserName = otherUserName,
+                    PartnerName = otherUserName,
+                    LastMessage = c.LastMessage ?? string.Empty,
+                    UpdatedAt = c.UpdatedAt
+                };
+            }).ToList();
 
             return View(model);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Start(int postId)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-
-            if (currentUser == null)
-            {
-                return Challenge();
-            }
-
-            var post = await _context.Posts
-                .FirstOrDefaultAsync(p =>
-                    p.PostId == postId &&
-                    p.Status == PostStatus.Approved);
-
-            if (post == null)
-            {
-                return NotFound();
-            }
-
-            if (post.UserId == currentUser.Id)
-            {
-                TempData["Error"] = "Bạn không thể nhắn tin với chính tin của mình.";
-                return RedirectToAction("Details", "Posts", new { id = postId });
-            }
-
-            var conversation = await _context.Conversations
-                .FirstOrDefaultAsync(c =>
-                    c.PostId == postId &&
-                    c.BuyerId == currentUser.Id &&
-                    c.SellerId == post.UserId);
-
-            if (conversation == null)
-            {
-                conversation = new Conversation
-                {
-                    PostId = post.PostId,
-                    BuyerId = currentUser.Id,
-                    SellerId = post.UserId,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
-
-                _context.Conversations.Add(conversation);
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToAction(nameof(Details), new { id = conversation.ConversationId });
-        }
-
+        [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUserId = _userManager.GetUserId(User);
 
-            if (currentUser == null)
+            if (string.IsNullOrEmpty(currentUserId))
             {
                 return Challenge();
             }
 
-            var conversation = await _context.Conversations
+            var conversation = await _context.Set<Conversation>()
                 .Include(c => c.Post)
+                .Include(c => c.Buyer)
+                .Include(c => c.Seller)
                 .Include(c => c.Messages)
-                .FirstOrDefaultAsync(c =>
-                    c.ConversationId == id &&
-                    (c.BuyerId == currentUser.Id || c.SellerId == currentUser.Id));
+                    .ThenInclude(m => m.Sender)
+                .FirstOrDefaultAsync(c => c.ConversationId == id);
 
             if (conversation == null)
             {
-                return NotFound();
+                TempData["Error"] = "Không tìm thấy cuộc trò chuyện.";
+                return RedirectToAction(nameof(Index));
             }
 
-            var partnerId = conversation.BuyerId == currentUser.Id
+            if (conversation.BuyerId != currentUserId && conversation.SellerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            var otherUser = conversation.BuyerId == currentUserId
+                ? conversation.Seller
+                : conversation.Buyer;
+
+            var otherUserId = conversation.BuyerId == currentUserId
                 ? conversation.SellerId
                 : conversation.BuyerId;
 
-            var partner = await _userManager.FindByIdAsync(partnerId);
-
-            var unreadMessages = conversation.Messages
-                .Where(m => m.SenderId != currentUser.Id && !m.IsRead)
-                .ToList();
-
-            foreach (var message in unreadMessages)
-            {
-                message.IsRead = true;
-            }
-
-            await _context.SaveChangesAsync();
+            var otherUserName = otherUser != null && !string.IsNullOrWhiteSpace(otherUser.FullName)
+                ? otherUser.FullName
+                : otherUser?.Email ?? "Người dùng";
 
             var model = new ChatDetailViewModel
             {
                 ConversationId = conversation.ConversationId,
-                CurrentUserId = currentUser.Id,
-                PartnerName = partner?.FullName ?? partner?.UserName ?? "Người dùng",
+                PostId = conversation.PostId,
+                Post = conversation.Post,
                 PostTitle = conversation.Post != null ? conversation.Post.Title : "Tin đã bị xóa",
+                CurrentUserId = currentUserId,
+                OtherUserId = otherUserId,
+                OtherUserName = otherUserName,
+                PartnerName = otherUserName,
                 Messages = conversation.Messages
                     .OrderBy(m => m.CreatedAt)
                     .ToList()
@@ -171,46 +130,120 @@ namespace RaoVatWeb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Send(int conversationId, string content)
+        public async Task<IActionResult> Send(int id, string messageContent)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUserId = _userManager.GetUserId(User);
 
-            if (currentUser == null)
+            if (string.IsNullOrEmpty(currentUserId))
             {
                 return Challenge();
             }
 
-            var conversation = await _context.Conversations
-                .FirstOrDefaultAsync(c =>
-                    c.ConversationId == conversationId &&
-                    (c.BuyerId == currentUser.Id || c.SellerId == currentUser.Id));
+            if (string.IsNullOrWhiteSpace(messageContent))
+            {
+                TempData["Error"] = "Vui lòng nhập nội dung tin nhắn.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var conversation = await _context.Set<Conversation>()
+                .FirstOrDefaultAsync(c => c.ConversationId == id);
 
             if (conversation == null)
             {
-                return NotFound();
+                TempData["Error"] = "Không tìm thấy cuộc trò chuyện.";
+                return RedirectToAction(nameof(Index));
             }
 
-            if (string.IsNullOrWhiteSpace(content))
+            if (conversation.BuyerId != currentUserId && conversation.SellerId != currentUserId)
             {
-                TempData["Error"] = "Vui lòng nhập nội dung tin nhắn.";
-                return RedirectToAction(nameof(Details), new { id = conversationId });
+                return Forbid();
             }
+
+            var content = messageContent.Trim();
 
             var message = new ChatMessage
-            {
-                ConversationId = conversationId,
-                SenderId = currentUser.Id,
-                Content = content.Trim(),
-                IsRead = false,
-                CreatedAt = DateTime.Now
-            };
+{
+    ConversationId = conversation.ConversationId,
+    SenderId = currentUserId,
+    Content = content,
+    IsRead = false,
+    CreatedAt = DateTime.Now
+};
 
+            _context.Set<ChatMessage>().Add(message);
+
+            conversation.LastMessage = content;
             conversation.UpdatedAt = DateTime.Now;
 
-            _context.ChatMessages.Add(message);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Details), new { id = conversationId });
+            return RedirectToAction(nameof(Details), new { id = conversation.ConversationId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Start(int postId)
+        {
+            return await StartChat(postId);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Start(int postId, bool fromLink = true)
+        {
+            return await StartChat(postId);
+        }
+
+        private async Task<IActionResult> StartChat(int postId)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                return Challenge();
+            }
+
+            var post = await _context.Posts
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PostId == postId);
+
+            if (post == null)
+            {
+                TempData["Error"] = "Không tìm thấy tin đăng.";
+                return RedirectToAction("Index", "Posts");
+            }
+
+            if (post.UserId == currentUserId)
+            {
+                TempData["Error"] = "Bạn không thể tự nhắn tin cho tin đăng của mình.";
+                return RedirectToAction("Details", "Posts", new { id = postId });
+            }
+
+            var sellerId = post.UserId;
+            var buyerId = currentUserId;
+
+            var conversation = await _context.Set<Conversation>()
+                .FirstOrDefaultAsync(c =>
+                    c.PostId == postId &&
+                    c.BuyerId == buyerId &&
+                    c.SellerId == sellerId);
+
+            if (conversation == null)
+            {
+                conversation = new Conversation
+                {
+                    PostId = postId,
+                    BuyerId = buyerId,
+                    SellerId = sellerId,
+                    LastMessage = string.Empty,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                _context.Set<Conversation>().Add(conversation);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Details), new { id = conversation.ConversationId });
         }
     }
 }

@@ -3,175 +3,794 @@
 
 @{
     ViewData["Title"] = "Chi tiết tin đăng";
+
+    var images = Model.Images != null
+        ? Model.Images.OrderByDescending(x => x.IsMainImage).ThenBy(x => x.PostImageId).ToList()
+        : new List<RaoVatWeb.Models.PostImage>();
+
+    var mainImage = images.FirstOrDefault();
+
+    string statusClass = "status-pending";
+    string statusText = "Chờ duyệt";
+
+    if (Model.Status == PostStatus.Approved)
+    {
+        statusClass = "status-approved";
+        statusText = "Đã duyệt";
+    }
+    else if (Model.Status == PostStatus.Rejected)
+    {
+        statusClass = "status-rejected";
+        statusText = "Bị từ chối";
+    }
+    else if (Model.Status == PostStatus.Hidden)
+    {
+        statusClass = "status-hidden";
+        statusText = "Đã ẩn";
+    }
 }
 
-<div class="container mt-4">
-    <a asp-area="Admin"
-       asp-controller="Posts"
-       asp-action="Index"
-       class="btn btn-secondary mb-3">
-        Quay lại quản lý tin
-    </a>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    <div class="card">
-        <div class="card-header">
-            <h3 class="mb-0">Chi tiết tin đăng</h3>
+    .admin-detail-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
+    }
+
+    .admin-detail-container {
+        max-width: 1360px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .detail-hero {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 34px;
+        padding: 38px;
+        margin-bottom: 24px;
+        box-shadow: 0 22px 52px rgba(15,23,42,0.18);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .detail-hero::after {
+        content: "";
+        position: absolute;
+        right: -90px;
+        bottom: -110px;
+        width: 320px;
+        height: 320px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 22px;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .hero-title {
+        font-size: 42px;
+        font-weight: 900;
+        line-height: 1.18;
+        margin-bottom: 10px;
+    }
+
+    .hero-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.65;
+        max-width: 760px;
+        margin: 0;
+    }
+
+    .back-btn {
+        height: 54px;
+        border-radius: 18px;
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+        padding: 0 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .back-btn:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .main-card,
+    .side-card,
+    .image-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+        overflow: hidden;
+    }
+
+    .main-image-wrap {
+        height: 460px;
+        background: #f3f4f6;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .main-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .no-image {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .status-badge,
+    .vip-badge {
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 900;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .image-status {
+        position: absolute;
+        top: 18px;
+        left: 18px;
+    }
+
+    .image-vip {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+    }
+
+    .status-pending {
+        background: #fff7ed;
+        color: #9a3412;
+        border-color: #fed7aa;
+    }
+
+    .status-approved {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .status-rejected {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .status-hidden {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .vip-badge {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    .thumb-row {
+        display: flex;
+        gap: 12px;
+        padding: 16px;
+        overflow-x: auto;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .thumb-img {
+        width: 98px;
+        height: 76px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 1px solid #e5e7eb;
+        flex-shrink: 0;
+    }
+
+    .main-body {
+        padding: 28px;
+    }
+
+    .post-title {
+        color: #111827;
+        font-size: 36px;
+        line-height: 1.25;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+
+    .post-price {
+        color: #ef4444;
+        font-size: 38px;
+        font-weight: 900;
+        margin-bottom: 20px;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .meta-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 16px;
+    }
+
+    .meta-label {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .meta-value {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+        line-height: 1.35;
+    }
+
+    .section-title {
+        color: #111827;
+        font-size: 26px;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+
+    .description-box {
+        color: #374151;
+        font-size: 17px;
+        line-height: 1.75;
+        white-space: pre-line;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 18px;
+    }
+
+    .side-stack {
+        display: grid;
+        gap: 20px;
+    }
+
+    .side-card {
+        padding: 24px;
+    }
+
+    .side-title {
+        color: #111827;
+        font-size: 25px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .side-subtitle {
+        color: #6b7280;
+        font-size: 15px;
+        line-height: 1.55;
+        margin-bottom: 20px;
+    }
+
+    .contact-box {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        border-radius: 22px;
+        padding: 18px;
+        margin-bottom: 14px;
+    }
+
+    .contact-label {
+        color: #92400e;
+        font-size: 14px;
+        font-weight: 850;
+        margin-bottom: 5px;
+    }
+
+    .contact-value {
+        color: #111827;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.35;
+    }
+
+    .action-grid {
+        display: grid;
+        gap: 10px;
+    }
+
+    .action-btn,
+    .action-link {
+        height: 48px;
+        border-radius: 16px;
+        border: none;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .btn-approve {
+        background: #16a34a;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background: #15803d;
+        color: white;
+    }
+
+    .btn-reject {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-hide {
+        background: #111827;
+        color: white;
+    }
+
+    .btn-hide:hover {
+        background: #000;
+        color: white;
+    }
+
+    .btn-restore {
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+    }
+
+    .btn-restore:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .btn-public {
+        background: #f3f4f6;
+        color: #111827;
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-public:hover {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .guide-note {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 16px;
+        color: #6b7280;
+        font-size: 15px;
+        line-height: 1.6;
+        font-weight: 650;
+    }
+
+    .image-card {
+        padding: 24px;
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .image-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #f9fafb;
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-caption {
+        padding: 10px;
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .empty-image {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 20px;
+        padding: 30px 18px;
+        text-align: center;
+        color: #6b7280;
+        font-weight: 750;
+    }
+
+    @@media (max-width: 1100px) {
+        .detail-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .post-title {
+            font-size: 31px;
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .meta-grid,
+        .image-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .main-image-wrap {
+            height: 330px;
+        }
+
+        .detail-hero,
+        .main-body,
+        .side-card,
+        .image-card {
+            padding: 22px;
+        }
+
+        .hero-title {
+            font-size: 32px;
+        }
+
+        .post-price {
+            font-size: 31px;
+        }
+    }
+</style>
+
+<div class="admin-detail-page">
+    <div class="admin-detail-container">
+        <div class="detail-hero">
+            <div class="hero-content">
+                <div>
+                    <div class="hero-badge">
+                        🔍 Kiểm duyệt tin đăng
+                    </div>
+
+                    <div class="hero-title">
+                        Chi tiết tin rao vặt
+                    </div>
+
+                    <p class="hero-subtitle">
+                        Admin xem nội dung, hình ảnh, thông tin liên hệ và quyết định duyệt, từ chối hoặc ẩn tin đăng.
+                    </p>
+                </div>
+
+                <a asp-area="Admin"
+                   asp-controller="Posts"
+                   asp-action="Index"
+                   class="back-btn">
+                    ← Quay lại danh sách
+                </a>
+            </div>
         </div>
 
-        <div class="card-body">
-            <h4>@Model.Title</h4>
+        <div class="detail-layout">
+            <div>
+                <div class="main-card">
+                    <div class="main-image-wrap">
+                        @if (mainImage != null && !string.IsNullOrWhiteSpace(mainImage.ImageUrl))
+                        {
+                            <img src="@mainImage.ImageUrl" alt="@Model.Title" />
+                        }
+                        else
+                        {
+                            <div class="no-image">
+                                Chưa có hình ảnh
+                            </div>
+                        }
 
-            <p class="text-muted">
-                Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                |
-                Lượt xem: @Model.ViewCount
-            </p>
+                        <div class="image-status">
+                            <span class="status-badge @statusClass">
+                                @statusText
+                            </span>
+                        </div>
 
-            <hr />
+                        @if (Model.IsVipPriority)
+                        {
+                            <div class="image-vip">
+                                <span class="vip-badge">
+                                    VIP nổi bật
+                                </span>
+                            </div>
+                        }
+                    </div>
 
-            <p>
-                <strong>Giá:</strong>
-                @string.Format("{0:N0} VNĐ", Model.Price)
-            </p>
-
-            <p>
-                <strong>Danh mục:</strong>
-                @(Model.Category != null ? Model.Category.Name : "Chưa có")
-            </p>
-
-            <p>
-                <strong>Khu vực:</strong>
-                @(Model.Area != null ? Model.Area.Name : "Chưa có")
-            </p>
-
-            <p>
-                <strong>Trạng thái:</strong>
-
-                @if (Model.Status == PostStatus.Pending)
-                {
-                    <span class="badge bg-warning text-dark">Chờ duyệt</span>
-                }
-                else if (Model.Status == PostStatus.Approved)
-                {
-                    <span class="badge bg-success">Đã duyệt</span>
-                }
-                else if (Model.Status == PostStatus.Rejected)
-                {
-                    <span class="badge bg-danger">Bị từ chối</span>
-                }
-                else if (Model.Status == PostStatus.Hidden)
-                {
-                    <span class="badge bg-secondary">Đã ẩn</span>
-                }
-            </p>
-
-            <hr />
-            <h5>Hình ảnh tin đăng</h5>
-
-            @if (Model.Images != null && Model.Images.Any())
-            {
-                <div class="row mb-3">
-                    @foreach (var image in Model.Images)
+                    @if (images.Any())
                     {
-                        <div class="col-md-4 mb-3">
-                            <img src="@image.ImageUrl"
-                                class="img-fluid rounded border"
-                                style="height: 220px; width: 100%; object-fit: cover;"
-                                alt="@Model.Title" />
+                        <div class="thumb-row">
+                            @foreach (var image in images)
+                            {
+                                <img src="@image.ImageUrl"
+                                     class="thumb-img"
+                                     alt="@Model.Title" />
+                            }
+                        </div>
+                    }
+
+                    <div class="main-body">
+                        <div class="post-title">
+                            @Model.Title
+                        </div>
+
+                        <div class="post-price">
+                            @Model.Price.ToString("N0") đ
+                        </div>
+
+                        <div class="meta-grid">
+                            <div class="meta-box">
+                                <div class="meta-label">Danh mục</div>
+                                <div class="meta-value">
+                                    @(Model.Category != null ? Model.Category.Name : "Chưa có danh mục")
+                                </div>
+                            </div>
+
+                            <div class="meta-box">
+                                <div class="meta-label">Khu vực</div>
+                                <div class="meta-value">
+                                    @(Model.Area != null ? Model.Area.Name : "Chưa có khu vực")
+                                </div>
+                            </div>
+
+                            <div class="meta-box">
+                                <div class="meta-label">Ngày đăng</div>
+                                <div class="meta-value">
+                                    @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+
+                            <div class="meta-box">
+                                <div class="meta-label">Lượt xem</div>
+                                <div class="meta-value">
+                                    @Model.ViewCount lượt xem
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">
+                            Mô tả tin đăng
+                        </div>
+
+                        <div class="description-box">
+                            @Model.Description
+                        </div>
+                    </div>
+                </div>
+
+                <div class="image-card mt-4">
+                    <div class="side-title">
+                        Tất cả hình ảnh
+                    </div>
+
+                    <div class="side-subtitle">
+                        Admin kiểm tra hình ảnh trước khi duyệt tin hiển thị công khai.
+                    </div>
+
+                    @if (images.Any())
+                    {
+                        <div class="image-grid">
+                            @foreach (var image in images)
+                            {
+                                <div class="image-item">
+                                    <img src="@image.ImageUrl" alt="@Model.Title" />
+
+                                    <div class="image-caption">
+                                        @(image.IsMainImage ? "Ảnh chính" : "Ảnh phụ")
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-image">
+                            Tin này chưa có hình ảnh nào.
                         </div>
                     }
                 </div>
-            }
-            else
-            {
-                <div class="alert alert-light">
-                    Tin này chưa có hình ảnh.
+            </div>
+
+            <div class="side-stack">
+                <div class="side-card">
+                    <div class="side-title">
+                        Người đăng tin
+                    </div>
+
+                    <div class="side-subtitle">
+                        Thông tin liên hệ được lấy từ tài khoản thành viên khi đăng tin.
+                    </div>
+
+                    <div class="contact-box">
+                        <div class="contact-label">Tên liên hệ</div>
+                        <div class="contact-value">
+                            @(string.IsNullOrWhiteSpace(Model.ContactName) ? "Chưa cập nhật" : Model.ContactName)
+                        </div>
+                    </div>
+
+                    <div class="contact-box">
+                        <div class="contact-label">Số điện thoại</div>
+                        <div class="contact-value">
+                            @(string.IsNullOrWhiteSpace(Model.ContactPhone) ? "Chưa cập nhật" : Model.ContactPhone)
+                        </div>
+                    </div>
                 </div>
-            }
-            <h5>Mô tả tin đăng</h5>
-            <p>@Model.Description</p>
 
-            <hr />
+                <div class="side-card">
+                    <div class="side-title">
+                        Thao tác kiểm duyệt
+                    </div>
 
-            <h5>Thông tin liên hệ</h5>
+                    <div class="side-subtitle">
+                        Chọn thao tác phù hợp với nội dung tin đăng.
+                    </div>
 
-            <p>
-                <strong>Người liên hệ:</strong>
-                @Model.ContactName
-            </p>
+                    <div class="action-grid">
+                        @if (Model.Status != PostStatus.Approved)
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Posts"
+                                  asp-action="Approve"
+                                  asp-route-id="@Model.PostId"
+                                  method="post"
+                                  asp-antiforgery="true">
+                                <button type="submit"
+                                        class="action-btn btn-approve"
+                                        onclick="return confirm('Duyệt tin này để hiển thị công khai?');">
+                                    Duyệt tin
+                                </button>
+                            </form>
+                        }
 
-            <p>
-                <strong>Số điện thoại:</strong>
-                @Model.ContactPhone
-            </p>
+                        @if (Model.Status != PostStatus.Rejected)
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Posts"
+                                  asp-action="Reject"
+                                  asp-route-id="@Model.PostId"
+                                  method="post"
+                                  asp-antiforgery="true">
+                                <button type="submit"
+                                        class="action-btn btn-reject"
+                                        onclick="return confirm('Từ chối tin đăng này?');">
+                                    Từ chối
+                                </button>
+                            </form>
+                        }
 
-            <hr />
+                        @if (Model.Status != PostStatus.Hidden)
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Posts"
+                                  asp-action="Hide"
+                                  asp-route-id="@Model.PostId"
+                                  method="post"
+                                  asp-antiforgery="true">
+                                <button type="submit"
+                                        class="action-btn btn-hide"
+                                        onclick="return confirm('Ẩn tin này khỏi website?');">
+                                    Ẩn tin
+                                </button>
+                            </form>
+                        }
 
-            <h5>Thao tác của Admin</h5>
+                        @if (Model.Status == PostStatus.Rejected || Model.Status == PostStatus.Hidden)
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Posts"
+                                  asp-action="RestoreToPending"
+                                  asp-route-id="@Model.PostId"
+                                  method="post"
+                                  asp-antiforgery="true">
+                                <button type="submit"
+                                        class="action-btn btn-restore"
+                                        onclick="return confirm('Chuyển tin về trạng thái chờ duyệt?');">
+                                    Chuyển về chờ duyệt
+                                </button>
+                            </form>
+                        }
 
-            @if (Model.Status != PostStatus.Approved)
-            {
-                <form asp-area="Admin"
-                      asp-controller="Posts"
-                      asp-action="Approve"
-                      asp-route-id="@Model.PostId"
-                      method="post"
-                      class="d-inline">
-                    @Html.AntiForgeryToken()
+                        @if (Model.Status == PostStatus.Approved)
+                        {
+                            <a asp-area=""
+                               asp-controller="Posts"
+                               asp-action="Details"
+                               asp-route-id="@Model.PostId"
+                               class="action-link btn-public">
+                                Xem ngoài website
+                            </a>
+                        }
+                    </div>
+                </div>
 
-                    <button type="submit" class="btn btn-success">
-                        Duyệt tin
-                    </button>
-                </form>
-            }
+                <div class="side-card">
+                    <div class="side-title">
+                        Ghi chú kiểm duyệt
+                    </div>
 
-            @if (Model.Status != PostStatus.Rejected)
-            {
-                <form asp-area="Admin"
-                      asp-controller="Posts"
-                      asp-action="Reject"
-                      asp-route-id="@Model.PostId"
-                      method="post"
-                      class="d-inline">
-                    @Html.AntiForgeryToken()
-
-                    <button type="submit" class="btn btn-danger">
-                        Từ chối
-                    </button>
-                </form>
-            }
-
-            @if (Model.Status != PostStatus.Hidden)
-            {
-                <form asp-area="Admin"
-                      asp-controller="Posts"
-                      asp-action="Hide"
-                      asp-route-id="@Model.PostId"
-                      method="post"
-                      class="d-inline">
-                    @Html.AntiForgeryToken()
-
-                    <button type="submit" class="btn btn-secondary">
-                        Ẩn tin
-                    </button>
-                </form>
-            }
-
-            @if (Model.Status != PostStatus.Pending)
-            {
-                <form asp-area="Admin"
-                      asp-controller="Posts"
-                      asp-action="RestoreToPending"
-                      asp-route-id="@Model.PostId"
-                      method="post"
-                      class="d-inline">
-                    @Html.AntiForgeryToken()
-
-                    <button type="submit" class="btn btn-warning">
-                        Chuyển về chờ duyệt
-                    </button>
-                </form>
-            }
+                    <div class="guide-note">
+                        Tin hợp lệ nên có tiêu đề rõ ràng, mô tả đúng nội dung, hình ảnh phù hợp,
+                        giá và khu vực minh bạch. Tin vi phạm, sai nội dung hoặc gây hiểu nhầm có thể bị từ chối hoặc ẩn.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

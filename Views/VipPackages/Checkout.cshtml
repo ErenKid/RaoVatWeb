@@ -1,128 +1,643 @@
 @model RaoVatWeb.Models.VipOrder
 
 @{
-    ViewData["Title"] = "Thanh toán gói VIP";
+    ViewData["Title"] = "Thanh toán VIP";
+
+    var package = Model.VipPackage;
+    var packageName = package != null ? package.Name : "Gói VIP";
+    var durationDays = package != null ? package.DurationDays : 0;
+
+    decimal amount = Model.Amount;
+
+    if (amount <= 0 && package != null)
+    {
+        amount = package.Price;
+    }
+
+    var orderCode = "VIP" + Model.VipOrderId.ToString("000000");
+    var expiredAt = DateTime.Now.AddDays(durationDays);
 }
 
-<div class="container mt-4">
-    <h2>Thanh toán gói VIP</h2>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    <div class="alert alert-warning">
-        Đây là trang thanh toán mô phỏng trong phạm vi đồ án. Sau khi xác nhận thanh toán, hệ thống sẽ tự động kích hoạt VIP.
-    </div>
+    .checkout-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 42px 0 56px;
+    }
 
-    <div class="row">
-        <div class="col-md-7">
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white">
-                    Thông tin đơn hàng
+    .checkout-container {
+        max-width: 1240px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .checkout-header {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 34px;
+        padding: 38px;
+        margin-bottom: 24px;
+        box-shadow: 0 22px 52px rgba(15,23,42,0.18);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .checkout-header::after {
+        content: "";
+        position: absolute;
+        right: -70px;
+        bottom: -90px;
+        width: 280px;
+        height: 280px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .checkout-head-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .checkout-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 16px;
+    }
+
+    .checkout-title {
+        font-size: 46px;
+        line-height: 1.15;
+        font-weight: 900;
+        margin-bottom: 10px;
+        letter-spacing: -0.4px;
+    }
+
+    .checkout-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.7;
+        max-width: 780px;
+        margin: 0;
+    }
+
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .order-card,
+    .payment-card,
+    .note-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        padding: 28px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+    }
+
+    .side-stack {
+        display: grid;
+        gap: 20px;
+    }
+
+    .card-title {
+        font-size: 27px;
+        font-weight: 900;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.55;
+        margin-bottom: 22px;
+    }
+
+    .package-box {
+        background: linear-gradient(180deg, #fffbea, #ffffff);
+        border: 2px solid #facc15;
+        border-radius: 26px;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .package-top {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .package-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 31px;
+        flex-shrink: 0;
+    }
+
+    .package-name {
+        font-size: 25px;
+        font-weight: 900;
+        color: #111827;
+        line-height: 1.25;
+    }
+
+    .package-duration {
+        color: #92400e;
+        font-size: 15px;
+        font-weight: 800;
+        margin-top: 4px;
+    }
+
+    .price-big {
+        color: #ef4444;
+        font-size: 42px;
+        font-weight: 900;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .price-note {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .order-info {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 14px 16px;
+    }
+
+    .info-label {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 750;
+    }
+
+    .info-value {
+        color: #111827;
+        font-size: 15px;
+        font-weight: 900;
+        text-align: right;
+    }
+
+    .qr-wrap {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 26px;
+        padding: 22px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 22px;
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .fake-qr {
+        width: 220px;
+        height: 220px;
+        background:
+            linear-gradient(90deg, #111827 10px, transparent 10px) 0 0 / 22px 22px,
+            linear-gradient(#111827 10px, transparent 10px) 0 0 / 22px 22px,
+            #ffffff;
+        border: 12px solid white;
+        border-radius: 22px;
+        box-shadow: 0 10px 24px rgba(15,23,42,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .fake-qr::before,
+    .fake-qr::after {
+        content: "";
+        position: absolute;
+        width: 62px;
+        height: 62px;
+        border: 12px solid #111827;
+        background: white;
+        border-radius: 10px;
+    }
+
+    .fake-qr::before {
+        left: 12px;
+        top: 12px;
+    }
+
+    .fake-qr::after {
+        right: 12px;
+        bottom: 12px;
+    }
+
+    .qr-center {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 66px;
+        height: 66px;
+        transform: translate(-50%, -50%);
+        border-radius: 18px;
+        background: #ffd43b;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 20px;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    }
+
+    .bank-title {
+        font-size: 21px;
+        font-weight: 900;
+        color: #111827;
+        margin-bottom: 10px;
+    }
+
+    .bank-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .bank-row {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 12px 14px;
+    }
+
+    .bank-label {
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 3px;
+    }
+
+    .bank-value {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .confirm-box {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        border-radius: 22px;
+        padding: 18px;
+        margin-bottom: 18px;
+    }
+
+    .confirm-title {
+        color: #92400e;
+        font-size: 18px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .confirm-text {
+        color: #92400e;
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .confirm-btn {
+        height: 56px;
+        border: none;
+        border-radius: 18px;
+        background: #111827;
+        color: white;
+        padding: 0 24px;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .confirm-btn:hover {
+        background: #000;
+    }
+
+    .back-btn {
+        height: 56px;
+        border-radius: 18px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #111827;
+        padding: 0 22px;
+        font-size: 17px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .back-btn:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .note-list {
+        display: grid;
+        gap: 13px;
+    }
+
+    .note-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 15px;
+    }
+
+    .note-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: #ffd43b;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        flex-shrink: 0;
+    }
+
+    .note-text {
+        color: #374151;
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 650;
+    }
+
+    @@media (max-width: 1100px) {
+        .checkout-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .checkout-title {
+            font-size: 38px;
+        }
+    }
+
+    @@media (max-width: 760px) {
+        .qr-wrap {
+            grid-template-columns: 1fr;
+        }
+
+        .fake-qr {
+            margin: 0 auto;
+        }
+
+        .checkout-header,
+        .order-card,
+        .payment-card,
+        .note-card {
+            padding: 22px;
+        }
+
+        .checkout-title {
+            font-size: 32px;
+        }
+
+        .info-row {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="checkout-page">
+    <div class="checkout-container">
+        <div class="checkout-header">
+            <div class="checkout-head-content">
+                <div class="checkout-badge">
+                    👑 Thanh toán gói VIP
                 </div>
 
-                <div class="card-body">
-                    <p>
-                        <strong>Mã đơn hàng:</strong>
-                        @Model.OrderCode
-                    </p>
-
-                    <p>
-                        <strong>Gói VIP:</strong>
-                        @Model.VipPackage?.Name
-                    </p>
-
-                    <p>
-                        <strong>Thời hạn:</strong>
-                        @Model.VipPackage?.DurationDays ngày
-                    </p>
-
-                    <p>
-                        <strong>Số tiền:</strong>
-                        <span class="text-danger fw-bold">
-                            @string.Format("{0:N0} VNĐ", Model.Amount)
-                        </span>
-                    </p>
-
-                    <p>
-                        <strong>Trạng thái:</strong>
-                        <span class="badge bg-warning text-dark">Chờ thanh toán</span>
-                    </p>
+                <div class="checkout-title">
+                    Hoàn tất thanh toán để kích hoạt VIP
                 </div>
+
+                <p class="checkout-subtitle">
+                    Đây là màn hình thanh toán mô phỏng cho đồ án. Sau khi xác nhận,
+                    hệ thống sẽ cập nhật đơn VIP, kích hoạt tài khoản VIP và ưu tiên tin đăng của bạn.
+                </p>
             </div>
+        </div>
 
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    Thông tin chuyển khoản mô phỏng
+        <div class="checkout-layout">
+            <div class="side-stack">
+                <div class="order-card">
+                    <div class="card-title">
+                        Thông tin đơn VIP
+                    </div>
+
+                    <div class="card-subtitle">
+                        Kiểm tra lại gói VIP trước khi xác nhận thanh toán.
+                    </div>
+
+                    <div class="package-box">
+                        <div class="package-top">
+                            <div class="package-icon">
+                                👑
+                            </div>
+
+                            <div>
+                                <div class="package-name">
+                                    @packageName
+                                </div>
+
+                                <div class="package-duration">
+                                    Thời hạn @durationDays ngày
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="price-big">
+                            @amount.ToString("N0") đ
+                        </div>
+
+                        <div class="price-note">
+                            Sau khi kích hoạt, VIP dự kiến có hiệu lực đến @expiredAt.ToString("dd/MM/yyyy").
+                        </div>
+                    </div>
+
+                    <div class="order-info">
+                        <div class="info-row">
+                            <div class="info-label">Mã đơn</div>
+                            <div class="info-value">@orderCode</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Ngày tạo</div>
+                            <div class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Trạng thái</div>
+                            <div class="info-value">Chờ thanh toán</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card-body">
-                    <p><strong>Ngân hàng:</strong> RaoVat Bank</p>
-                    <p><strong>Số tài khoản:</strong> 0123456789</p>
-                    <p><strong>Chủ tài khoản:</strong> RAOVAT WEB</p>
+                <div class="note-card">
+                    <div class="card-title">
+                        Sau khi kích hoạt
+                    </div>
 
-                    <p>
-                        <strong>Số tiền:</strong>
-                        @string.Format("{0:N0} VNĐ", Model.Amount)
-                    </p>
+                    <div class="card-subtitle">
+                        Quyền lợi VIP sẽ được áp dụng trực tiếp vào tài khoản.
+                    </div>
 
-                    <p>
-                        <strong>Nội dung chuyển khoản:</strong>
-                        <span class="badge bg-dark">@Model.OrderCode</span>
-                    </p>
+                    <div class="note-list">
+                        <div class="note-item">
+                            <div class="note-icon">1</div>
+                            <div class="note-text">
+                                Tài khoản được chuyển sang trạng thái thành viên VIP.
+                            </div>
+                        </div>
 
-                    <div class="border rounded text-center p-4 bg-light">
-                        <div style="font-size: 70px;">▦</div>
-                        <div class="fw-bold">QR THANH TOÁN MÔ PHỎNG</div>
-                        <div class="text-muted small">
-                            Quét QR hoặc chuyển khoản theo nội dung trên
+                        <div class="note-item">
+                            <div class="note-icon">2</div>
+                            <div class="note-text">
+                                Các tin phù hợp của bạn được gắn nhãn VIP nổi bật.
+                            </div>
+                        </div>
+
+                        <div class="note-item">
+                            <div class="note-icon">3</div>
+                            <div class="note-text">
+                                Tin VIP được ưu tiên hiển thị trên trang chủ và danh sách tin rao.
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">
-                    Xác nhận giao dịch
+            <div class="payment-card">
+                <div class="card-title">
+                    Chuyển khoản mô phỏng
                 </div>
 
-                <div class="card-body">
-                    <p>
-                        Sau khi thanh toán thành công, hệ thống sẽ tự động kích hoạt VIP cho tài khoản của bạn.
-                    </p>
+                <div class="card-subtitle">
+                    Quét mã QR hoặc nhập thông tin chuyển khoản bên dưới.
+                </div>
 
+                <div class="qr-wrap">
+                    <div class="fake-qr">
+                        <div class="qr-center">
+                            RV
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="bank-title">
+                            Thông tin thanh toán
+                        </div>
+
+                        <div class="bank-list">
+                            <div class="bank-row">
+                                <div class="bank-label">Ngân hàng</div>
+                                <div class="bank-value">RaoVat Bank</div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-label">Số tài khoản</div>
+                                <div class="bank-value">9999 8888 7777</div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-label">Chủ tài khoản</div>
+                                <div class="bank-value">RAOVATWEB DEMO</div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-label">Nội dung</div>
+                                <div class="bank-value">@orderCode</div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-label">Số tiền</div>
+                                <div class="bank-value">@amount.ToString("N0") đ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="confirm-box">
+                    <div class="confirm-title">
+                        Xác nhận thanh toán
+                    </div>
+
+                    <p class="confirm-text">
+                        Trong bản demo, nút bên dưới sẽ mô phỏng việc thanh toán thành công
+                        và kích hoạt VIP ngay cho tài khoản hiện tại.
+                    </p>
+                </div>
+
+                <div class="action-row">
                     <form asp-controller="VipPackages"
                           asp-action="ConfirmPayment"
                           asp-route-id="@Model.VipOrderId"
                           method="post"
-                          class="mb-2">
-
-                        @Html.AntiForgeryToken()
+                          asp-antiforgery="true">
 
                         <button type="submit"
-                                class="btn btn-success w-100"
-                                onclick="return confirm('Xác nhận mô phỏng thanh toán thành công?');">
+                                class="confirm-btn"
+                                onclick="return confirm('Xác nhận đã thanh toán và kích hoạt VIP?');">
                             Tôi đã thanh toán
-                        </button>
-                    </form>
-
-                    <form asp-controller="VipPackages"
-                          asp-action="Cancel"
-                          asp-route-id="@Model.VipOrderId"
-                          method="post">
-
-                        @Html.AntiForgeryToken()
-
-                        <button type="submit"
-                                class="btn btn-outline-danger w-100"
-                                onclick="return confirm('Bạn có chắc muốn hủy đơn này không?');">
-                            Hủy đơn
                         </button>
                     </form>
 
                     <a asp-controller="VipPackages"
                        asp-action="Index"
-                       class="btn btn-secondary w-100 mt-2">
-                        Quay lại gói VIP
+                       class="back-btn">
+                        Chọn gói khác
                     </a>
                 </div>
             </div>

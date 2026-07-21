@@ -1,107 +1,524 @@
 @model IEnumerable<RaoVatWeb.Models.Post>
 
 @{
-    ViewData["Title"] = "Danh sách tin rao vặt";
+    ViewData["Title"] = "Tin rao";
+
+    var posts = Model != null
+        ? Model.ToList()
+        : new List<RaoVatWeb.Models.Post>();
+
+    var keyword = ViewBag.Keyword as string ?? "";
+    int? categoryId = ViewBag.CategoryId as int?;
+    int? areaId = ViewBag.AreaId as int?;
+
+    var categories = ViewBag.Categories as List<RaoVatWeb.Models.Category>
+        ?? new List<RaoVatWeb.Models.Category>();
+
+    var areas = ViewBag.Areas as List<RaoVatWeb.Models.Area>
+        ?? new List<RaoVatWeb.Models.Area>();
 }
 
-<div class="container mt-4">
-    <h2>Danh sách tin rao vặt</h2>
-
-    <form asp-controller="Posts"
-          asp-action="Index"
-          method="get"
-          class="row g-2 mb-4">
-
-        <div class="col-md-4">
-            <input type="text"
-                   name="keyword"
-                   value="@ViewBag.Keyword"
-                   class="form-control"
-                   placeholder="Tìm theo tiêu đề hoặc mô tả..." />
-        </div>
-
-        <div class="col-md-3">
-            <select name="categoryId"
-                    asp-items="@(ViewBag.Categories as SelectList)"
-                    class="form-select">
-                <option value="">-- Tất cả danh mục --</option>
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <select name="areaId"
-                    asp-items="@(ViewBag.Areas as SelectList)"
-                    class="form-select">
-                <option value="">-- Tất cả khu vực --</option>
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">
-                Tìm kiếm
-            </button>
-        </div>
-    </form>
-
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            Chưa có tin rao vặt phù hợp.
-        </div>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
-    else
-    {
-        <div class="row">
-            @foreach (var item in Model)
-            {
-                <div class="col-md-4 mb-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            @if (item.IsVipPriority)
+
+    .posts-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 50px;
+    }
+
+    .posts-container {
+        max-width: 1320px;
+        width: 94vw;
+        margin: 0 auto;
+    }
+
+    .posts-hero {
+        background: linear-gradient(135deg, #ffd43b, #f2b705);
+        border-radius: 32px;
+        padding: 34px 36px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.12);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .posts-hero::after {
+        content: "";
+        position: absolute;
+        right: -60px;
+        bottom: -70px;
+        width: 250px;
+        height: 250px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.25);
+    }
+
+    .posts-hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .posts-title {
+        font-size: 46px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .posts-subtitle {
+        font-size: 18px;
+        color: #374151;
+        max-width: 780px;
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+
+    .filter-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 26px;
+        padding: 20px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+        margin-bottom: 24px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 130px 120px;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .filter-input,
+    .filter-select {
+        height: 54px;
+        border-radius: 16px;
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        padding: 0 16px;
+        font-size: 16px;
+        font-weight: 600;
+        outline: none;
+        width: 100%;
+    }
+
+    .filter-input:focus,
+    .filter-select:focus {
+        background: white;
+        border-color: #f2b705;
+        box-shadow: 0 0 0 0.22rem rgba(255,212,59,0.22);
+    }
+
+    .filter-btn {
+        height: 54px;
+        border: none;
+        border-radius: 16px;
+        background: #111827;
+        color: white;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .filter-btn:hover {
+        background: #000;
+    }
+
+    .clear-btn {
+        height: 54px;
+        border-radius: 16px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #111827;
+        font-size: 16px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .clear-btn:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .section-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 26px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+    }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .section-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+    }
+
+    .post-count {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    .post-card {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        overflow: hidden;
+        background: white;
+        height: 100%;
+        transition: 0.18s ease;
+    }
+
+    .post-card:hover {
+        color: inherit;
+        transform: translateY(-5px);
+        box-shadow: 0 18px 36px rgba(15,23,42,0.13);
+    }
+
+    .post-image-wrap {
+        height: 220px;
+        background: #f3f4f6;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .post-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: 0.24s ease;
+    }
+
+    .post-card:hover .post-image-wrap img {
+        transform: scale(1.04);
+    }
+
+    .post-empty-image {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+    }
+
+    .vip-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: #ef4444;
+        color: white;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 800;
+        box-shadow: 0 8px 20px rgba(239,68,68,0.26);
+    }
+
+    .date-badge {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        background: rgba(17,24,39,0.86);
+        color: white;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .post-body {
+        padding: 16px;
+    }
+
+    .post-title {
+        color: #111827;
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.42;
+        min-height: 48px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+
+    .post-price {
+        color: #ef4444;
+        font-size: 23px;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .post-meta {
+        display: grid;
+        gap: 5px;
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 22px;
+        padding: 42px 24px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .empty-box strong {
+        color: #111827;
+    }
+
+    @@media (max-width: 1200px) {
+        .posts-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .posts-title {
+            font-size: 38px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .posts-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @@media (max-width: 520px) {
+        .posts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .posts-title {
+            font-size: 30px;
+        }
+
+        .posts-hero {
+            padding: 26px 22px;
+        }
+    }
+</style>
+
+<div class="posts-page">
+    <div class="posts-container">
+        <div class="posts-hero">
+            <div class="posts-hero-content">
+                <div class="posts-title">
+                    Danh sách tin rao
+                </div>
+
+                <p class="posts-subtitle">
+                    Khám phá các tin mua bán, trao đổi, cho thuê, dịch vụ và việc làm
+                    đã được Admin duyệt. Tin VIP được ưu tiên hiển thị ở phía trên.
+                </p>
+            </div>
+        </div>
+
+        <div class="filter-card">
+            <form asp-controller="Posts"
+                  asp-action="Index"
+                  method="get">
+
+                <div class="filter-grid">
+                    <input type="text"
+                           name="keyword"
+                           value="@keyword"
+                           class="filter-input"
+                           placeholder="Tìm theo tiêu đề hoặc mô tả..." />
+
+                    <select name="categoryId" class="filter-select">
+                        <option value="">Tất cả danh mục</option>
+
+                        @foreach (var category in categories)
+                        {
+                            if (categoryId == category.CategoryId)
                             {
-                                <span class="badge bg-danger mb-2">Tin nổi bật</span>
+                                <option value="@category.CategoryId" selected>@category.Name</option>
                             }
+                            else
+                            {
+                                <option value="@category.CategoryId">@category.Name</option>
+                            }
+                        }
+                    </select>
 
-                            <h5 class="card-title">
-                                @item.Title
-                            </h5>
+                    <select name="areaId" class="filter-select">
+                        <option value="">Tất cả khu vực</option>
 
-                            <p class="card-text text-muted">
-                                @(item.Description.Length > 100 
-                                    ? item.Description.Substring(0, 100) + "..." 
-                                    : item.Description)
-                            </p>
+                        @foreach (var area in areas)
+                        {
+                            if (areaId == area.AreaId)
+                            {
+                                <option value="@area.AreaId" selected>@area.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@area.AreaId">@area.Name</option>
+                            }
+                        }
+                    </select>
 
-                            <p class="mb-1">
-                                <strong>Giá:</strong>
-                                @string.Format("{0:N0} VNĐ", item.Price)
-                            </p>
+                    <button type="submit" class="filter-btn">
+                        Tìm kiếm
+                    </button>
 
-                            <p class="mb-1">
-                                <strong>Danh mục:</strong>
-                                @(item.Category != null ? item.Category.Name : "Chưa có")
-                            </p>
+                    <a asp-controller="Posts"
+                       asp-action="Index"
+                       class="clear-btn">
+                        Làm mới
+                    </a>
+                </div>
+            </form>
+        </div>
 
-                            <p class="mb-1">
-                                <strong>Khu vực:</strong>
-                                @(item.Area != null ? item.Area.Name : "Chưa có")
-                            </p>
-
-                            <p class="mb-1">
-                                <strong>Lượt xem:</strong>
-                                @item.ViewCount
-                            </p>
-
-                            <a asp-controller="Posts"
-                               asp-action="Details"
-                               asp-route-id="@item.PostId"
-                               class="btn btn-outline-primary mt-2">
-                                Xem chi tiết
-                            </a>
-                        </div>
+        <div class="section-card">
+            <div class="section-head">
+                <div>
+                    <div class="section-title">
+                        Tin đang hiển thị
                     </div>
+
+                    <div class="section-subtitle">
+                        Chỉ hiển thị các tin có trạng thái đã duyệt.
+                    </div>
+                </div>
+
+                <div class="post-count">
+                    @posts.Count tin đăng
+                </div>
+            </div>
+
+            @if (!posts.Any())
+            {
+                <div class="empty-box">
+                    <strong>Chưa có tin phù hợp.</strong>
+                    <br />
+                    Hãy thử thay đổi từ khóa, danh mục hoặc khu vực tìm kiếm.
+                </div>
+            }
+            else
+            {
+                <div class="posts-grid">
+                    @foreach (var post in posts)
+                    {
+                        var image = post.Images != null
+                            ? post.Images
+                                .OrderByDescending(x => x.IsMainImage)
+                                .ThenBy(x => x.PostImageId)
+                                .FirstOrDefault()
+                            : null;
+
+                        <a asp-controller="Posts"
+                           asp-action="Details"
+                           asp-route-id="@post.PostId"
+                           class="post-card">
+
+                            <div class="post-image-wrap">
+                                @if (image != null && !string.IsNullOrWhiteSpace(image.ImageUrl))
+                                {
+                                    <img src="@image.ImageUrl" alt="@post.Title" />
+                                }
+                                else
+                                {
+                                    <div class="post-empty-image">
+                                        Chưa có hình ảnh
+                                    </div>
+                                }
+
+                                @if (post.IsVipPriority)
+                                {
+                                    <div class="vip-badge">
+                                        VIP nổi bật
+                                    </div>
+                                }
+
+                                <div class="date-badge">
+                                    @post.CreatedAt.ToString("dd/MM")
+                                </div>
+                            </div>
+
+                            <div class="post-body">
+                                <div class="post-title">
+                                    @post.Title
+                                </div>
+
+                                <div class="post-price">
+                                    @post.Price.ToString("N0") đ
+                                </div>
+
+                                <div class="post-meta">
+                                    <div>
+                                        📍 @(post.Area != null ? post.Area.Name : "Chưa có khu vực")
+                                    </div>
+
+                                    <div>
+                                        📂 @(post.Category != null ? post.Category.Name : "Chưa có danh mục")
+                                    </div>
+
+                                    <div>
+                                        👁 @post.ViewCount lượt xem
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    }
                 </div>
             }
         </div>
-    }
+    </div>
 </div>

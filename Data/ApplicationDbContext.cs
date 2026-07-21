@@ -16,7 +16,8 @@ namespace RaoVatWeb.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<PostImage> PostImages { get; set; }
         public DbSet<Conversation> Conversations { get; set; } = null!;
-        public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
+
+public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
 
         public DbSet<VipPackage> VipPackages { get; set; } = null!;
 

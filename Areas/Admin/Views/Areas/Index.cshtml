@@ -2,101 +2,591 @@
 
 @{
     ViewData["Title"] = "Quản lý khu vực";
+
+    var areas = Model != null
+        ? Model.ToList()
+        : new List<RaoVatWeb.Models.Area>();
+
+    var postCounts = ViewBag.PostCounts as Dictionary<int, int>
+        ?? new Dictionary<int, int>();
+
+    var parentNames = ViewBag.ParentNames as Dictionary<int, string>
+        ?? new Dictionary<int, string>();
+
+    var activeCount = areas.Count(x => x.IsActive);
+    var inactiveCount = areas.Count(x => !x.IsActive);
+    var parentCount = areas.Count(x => x.ParentAreaId == null);
+    var childCount = areas.Count(x => x.ParentAreaId != null);
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Quản lý khu vực</h2>
-
-        <a asp-area="Admin"
-           asp-controller="Areas"
-           asp-action="Create"
-           class="btn btn-primary">
-            Thêm khu vực
-        </a>
-    </div>
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
+<style>
+    .area-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 34px 0 56px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Tên khu vực</th>
-                <th>Khu vực cha</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
+    .area-container {
+        max-width: 1320px;
+        width: 94vw;
+        margin: 0 auto;
+    }
 
-        <tbody>
-            @foreach (var item in Model)
+    .page-header {
+        background: linear-gradient(135deg, #111827, #020617);
+        color: white;
+        border-radius: 32px;
+        padding: 34px 36px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        bottom: -100px;
+        width: 300px;
+        height: 300px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .page-badge {
+        display: inline-flex;
+        background: rgba(255,212,59,0.14);
+        border: 1px solid rgba(255,212,59,0.38);
+        color: #ffd43b;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .page-title {
+        font-size: 42px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: #d1d5db;
+        font-size: 17px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .header-btn {
+        height: 52px;
+        border-radius: 17px;
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .header-btn:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .header-btn-dark {
+        background: rgba(255,255,255,0.08);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .header-btn-dark:hover {
+        background: rgba(255,255,255,0.14);
+        color: white;
+    }
+
+    .alert-box {
+        border-radius: 18px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        font-weight: 800;
+    }
+
+    .alert-success {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #047857;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 26px;
+        padding: 22px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+    }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 17px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        color: #111827;
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .area-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 30px;
+        padding: 26px;
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .card-title {
+        color: #111827;
+        font-size: 30px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.55;
+    }
+
+    .area-count {
+        background: #fffbea;
+        border: 1px solid #facc15;
+        color: #92400e;
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-size: 14px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .area-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .area-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        background: #fff;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 70px 1fr 220px;
+        gap: 18px;
+        align-items: center;
+        transition: 0.18s ease;
+    }
+
+    .area-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 34px rgba(15,23,42,0.09);
+    }
+
+    .area-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 24px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .area-name-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .area-name {
+        color: #111827;
+        font-size: 23px;
+        line-height: 1.3;
+        font-weight: 900;
+    }
+
+    .badge {
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 900;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .badge-active {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .badge-inactive {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .badge-parent {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+    }
+
+    .badge-child {
+        background: #fffbea;
+        color: #92400e;
+        border-color: #facc15;
+    }
+
+    .area-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.5;
+    }
+
+    .meta-pill {
+        color: #374151;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 850;
+    }
+
+    .action-box {
+        display: grid;
+        gap: 10px;
+    }
+
+    .action-link,
+    .action-btn {
+        height: 42px;
+        border-radius: 14px;
+        border: none;
+        width: 100%;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .btn-detail {
+        background: #f3f4f6;
+        color: #111827;
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-edit {
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+    }
+
+    .btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #cbd5e1;
+        border-radius: 24px;
+        padding: 46px 24px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 17px;
+        font-weight: 750;
+    }
+
+    @@media (max-width: 1050px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .page-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-actions {
+            justify-content: flex-start;
+        }
+
+        .area-item {
+            grid-template-columns: 70px 1fr;
+        }
+
+        .action-box {
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .area-item {
+            grid-template-columns: 1fr;
+        }
+
+        .action-box {
+            grid-template-columns: 1fr;
+        }
+
+        .page-title {
+            font-size: 32px;
+        }
+
+        .page-header,
+        .area-card {
+            padding: 22px;
+        }
+    }
+</style>
+
+<div class="area-page">
+    <div class="area-container">
+        <div class="page-header">
+            <div class="page-header-content">
+                <div>
+                    <div class="page-badge">📍 Khu vực</div>
+                    <div class="page-title">Quản lý khu vực</div>
+                    <p class="page-subtitle">
+                        Quản lý tỉnh, thành phố và nhóm khu vực hiển thị trong hệ thống.
+                    </p>
+                </div>
+
+                <div class="header-actions">
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="header-btn header-btn-dark">
+                        Về Dashboard
+                    </a>
+
+                    <a asp-area="Admin" asp-controller="Areas" asp-action="Create" class="header-btn">
+                        + Thêm khu vực
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-box alert-success">@TempData["Success"]</div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-box alert-error">@TempData["Error"]</div>
+        }
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📍</div>
+                <div class="stat-label">Tổng khu vực</div>
+                <div class="stat-value">@areas.Count</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-label">Đang hoạt động</div>
+                <div class="stat-value">@activeCount</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🗺️</div>
+                <div class="stat-label">Khu vực cấp cha</div>
+                <div class="stat-value">@parentCount</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏙️</div>
+                <div class="stat-label">Khu vực con</div>
+                <div class="stat-value">@childCount</div>
+            </div>
+        </div>
+
+        <div class="area-card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Danh sách khu vực</div>
+                    <div class="card-subtitle">Các khu vực được sử dụng khi đăng tin và tìm kiếm tin rao.</div>
+                </div>
+
+                <div class="area-count">@areas.Count khu vực</div>
+            </div>
+
+            @if (!areas.Any())
             {
-                <tr>
-                    <td>@item.AreaId</td>
-
-                    <td>@item.Name</td>
-
-                    <td>
-                        @(item.ParentArea != null ? item.ParentArea.Name : "Không có")
-                    </td>
-
-                    <td>
-                        @if (item.IsActive)
-                        {
-                            <span class="badge bg-success">Đang hiển thị</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">Đã ẩn</span>
-                        }
-                    </td>
-
-                    <td>
-                        <a asp-area="Admin"
-                           asp-controller="Areas"
-                           asp-action="Edit"
-                           asp-route-id="@item.AreaId"
-                           class="btn btn-sm btn-warning">
-                            Sửa
-                        </a>
-
-                        <form asp-area="Admin"
-                              asp-controller="Areas"
-                              asp-action="ToggleStatus"
-                              asp-route-id="@item.AreaId"
-                              method="post"
-                              class="d-inline">
-                            @Html.AntiForgeryToken()
-
-                            @if (item.IsActive)
-                            {
-                                <button type="submit" class="btn btn-sm btn-secondary">
-                                    Ẩn
-                                </button>
-                            }
-                            else
-                            {
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    Khôi phục
-                                </button>
-                            }
-                        </form>
-                    </td>
-                </tr>
+                <div class="empty-box">
+                    Chưa có khu vực nào.
+                </div>
             }
-        </tbody>
-    </table>
+            else
+            {
+                <div class="area-list">
+                    @foreach (var area in areas)
+                    {
+                        var count = postCounts.ContainsKey(area.AreaId)
+                            ? postCounts[area.AreaId]
+                            : 0;
 
-    <a asp-area="Admin"
-       asp-controller="Dashboard"
-       asp-action="Index"
-       class="btn btn-secondary">
-        Quay lại Dashboard
-    </a>
+                        var parentName = parentNames.ContainsKey(area.AreaId)
+                            ? parentNames[area.AreaId]
+                            : "Không có";
+
+                        <div class="area-item">
+                            <div class="area-icon">
+                                @(area.ParentAreaId == null ? "🗺️" : "📍")
+                            </div>
+
+                            <div>
+                                <div class="area-name-row">
+                                    <div class="area-name">@area.Name</div>
+
+                                    @if (area.ParentAreaId == null)
+                                    {
+                                        <span class="badge badge-parent">Cấp cha</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-child">Thuộc @parentName</span>
+                                    }
+
+                                    @if (area.IsActive)
+                                    {
+                                        <span class="badge badge-active">Đang hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-inactive">Đã tắt</span>
+                                    }
+                                </div>
+
+                                <div class="area-meta">
+                                    <span class="meta-pill">ID: @area.AreaId</span>
+                                    <span class="meta-pill">📢 @count tin đăng</span>
+                                    <span>Ngày tạo: @area.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+
+                            <div class="action-box">
+                                <a asp-area="Admin"
+                                   asp-controller="Areas"
+                                   asp-action="Details"
+                                   asp-route-id="@area.AreaId"
+                                   class="action-link btn-detail">
+                                    Chi tiết
+                                </a>
+
+                                <a asp-area="Admin"
+                                   asp-controller="Areas"
+                                   asp-action="Edit"
+                                   asp-route-id="@area.AreaId"
+                                   class="action-link btn-edit">
+                                    Sửa
+                                </a>
+
+                                <form asp-area="Admin"
+                                      asp-controller="Areas"
+                                      asp-action="Delete"
+                                      asp-route-id="@area.AreaId"
+                                      method="post"
+                                      asp-antiforgery="true">
+
+                                    <button type="submit"
+                                            class="action-btn btn-delete"
+                                            onclick="return confirm('Bạn có chắc muốn xóa khu vực này không?');">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>

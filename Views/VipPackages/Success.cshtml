@@ -1,55 +1,445 @@
 @model RaoVatWeb.Models.VipOrder
 
 @{
-    ViewData["Title"] = "Thanh toán thành công";
+    ViewData["Title"] = "Kích hoạt VIP thành công";
+
+    var packageName = Model.VipPackage != null
+        ? Model.VipPackage.Name
+        : "Gói VIP";
+
+    var durationDays = Model.VipPackage != null
+        ? Model.VipPackage.DurationDays
+        : 0;
+
+    var paidAt = Model.PaidAt.HasValue
+        ? Model.PaidAt.Value.ToString("dd/MM/yyyy HH:mm")
+        : DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+
+    var expiredAt = Model.VipExpiredAt.HasValue
+        ? Model.VipExpiredAt.Value.ToString("dd/MM/yyyy")
+        : "Chưa xác định";
+
+    var orderCode = "VIP" + Model.VipOrderId.ToString("000000");
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-body text-center">
-            <div class="display-4 text-success mb-3">✓</div>
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-            <h2>Thanh toán thành công</h2>
+    .success-page {
+        background: #f4f5f7;
+        min-height: 100vh;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        margin-top: -24px;
+        padding: 46px 0 60px;
+    }
 
-            <p class="text-muted">
-                Gói VIP của bạn đã được kích hoạt tự động.
-            </p>
+    .success-container {
+        max-width: 1180px;
+        width: 94vw;
+        margin: 0 auto;
+    }
 
-            <hr />
+    .success-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 38px;
+        overflow: hidden;
+        box-shadow: 0 26px 70px rgba(15,23,42,0.16);
+    }
 
-            <p>
-                <strong>Mã đơn hàng:</strong>
-                @Model.OrderCode
-            </p>
+    .success-hero {
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.34), transparent 22%),
+            radial-gradient(circle at 84% 12%, rgba(255,255,255,0.22), transparent 18%),
+            linear-gradient(135deg, #111827, #020617);
+        color: white;
+        padding: 58px 38px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
 
-            <p>
-                <strong>Gói VIP:</strong>
-                @Model.VipPackage?.Name
-            </p>
+    .success-hero::after {
+        content: "";
+        position: absolute;
+        right: -90px;
+        bottom: -110px;
+        width: 300px;
+        height: 300px;
+        border-radius: 999px;
+        background: rgba(255,212,59,0.18);
+    }
 
-            <p>
-                <strong>Số tiền:</strong>
-                @string.Format("{0:N0} VNĐ", Model.Amount)
-            </p>
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 32px;
+        background: #ffd43b;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 54px;
+        font-weight: 900;
+        margin: 0 auto 22px;
+        box-shadow: 0 18px 44px rgba(255,212,59,0.24);
+        position: relative;
+        z-index: 2;
+    }
 
-            <p>
-                <strong>VIP có hiệu lực đến:</strong>
-                <span class="text-danger fw-bold">
-                    @Model.VipExpiredAt?.ToString("dd/MM/yyyy HH:mm")
-                </span>
-            </p>
+    .success-title {
+        font-size: 46px;
+        font-weight: 900;
+        line-height: 1.16;
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 2;
+    }
 
-            <a asp-controller="Posts"
-               asp-action="Create"
-               class="btn btn-primary">
-                Đăng tin VIP ngay
-            </a>
+    .success-subtitle {
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.7;
+        max-width: 760px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
 
-            <a asp-controller="Posts"
-               asp-action="MyPosts"
-               class="btn btn-secondary">
-                Về Tin của tôi
-            </a>
+    .success-body {
+        padding: 34px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .info-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 18px;
+    }
+
+    .info-label {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .info-value {
+        color: #111827;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1.35;
+    }
+
+    .package-panel {
+        background: linear-gradient(180deg, #fffbea, #ffffff);
+        border: 2px solid #facc15;
+        border-radius: 30px;
+        padding: 28px;
+        margin-bottom: 28px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 24px;
+        align-items: center;
+    }
+
+    .package-left {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+    }
+
+    .package-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 24px;
+        background: #111827;
+        color: #ffd43b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 38px;
+        flex-shrink: 0;
+    }
+
+    .package-name {
+        color: #111827;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 4px;
+    }
+
+    .package-desc {
+        color: #92400e;
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    .package-price {
+        color: #ef4444;
+        font-size: 34px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .benefit-section {
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        color: #111827;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 16px;
+    }
+
+    .benefit-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .benefit-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 10px 26px rgba(15,23,42,0.06);
+    }
+
+    .benefit-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: #dcfce7;
+        color: #047857;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+
+    .benefit-title {
+        color: #111827;
+        font-size: 18px;
+        font-weight: 900;
+        margin-bottom: 7px;
+    }
+
+    .benefit-text {
+        color: #6b7280;
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 650;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding-top: 8px;
+    }
+
+    .main-btn,
+    .sub-btn {
+        height: 56px;
+        border-radius: 18px;
+        padding: 0 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-weight: 900;
+        text-decoration: none;
+    }
+
+    .main-btn {
+        background: #111827;
+        color: white;
+        border: none;
+    }
+
+    .main-btn:hover {
+        background: #000;
+        color: white;
+    }
+
+    .sub-btn {
+        background: #ffd43b;
+        color: #111827;
+        border: 1px solid #f2b705;
+    }
+
+    .sub-btn:hover {
+        background: #facc15;
+        color: #111827;
+    }
+
+    @@media (max-width: 1000px) {
+        .info-grid,
+        .benefit-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .package-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .package-price {
+            white-space: normal;
+        }
+    }
+
+    @@media (max-width: 680px) {
+        .info-grid,
+        .benefit-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .success-title {
+            font-size: 34px;
+        }
+
+        .success-body,
+        .success-hero {
+            padding: 26px;
+        }
+
+        .package-left {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="success-page">
+    <div class="success-container">
+        <div class="success-card">
+            <div class="success-hero">
+                <div class="success-icon">
+                    ✓
+                </div>
+
+                <div class="success-title">
+                    Kích hoạt VIP thành công
+                </div>
+
+                <div class="success-subtitle">
+                    Tài khoản của bạn đã được nâng cấp VIP. Các tin phù hợp sẽ được ưu tiên hiển thị
+                    và gắn nhãn nổi bật trên hệ thống RaoVatWeb.
+                </div>
+            </div>
+
+            <div class="success-body">
+                <div class="package-panel">
+                    <div class="package-left">
+                        <div class="package-icon">
+                            👑
+                        </div>
+
+                        <div>
+                            <div class="package-name">
+                                @packageName
+                            </div>
+
+                            <div class="package-desc">
+                                Thời hạn @durationDays ngày - VIP có hiệu lực đến @expiredAt
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="package-price">
+                        @Model.Amount.ToString("N0") đ
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-box">
+                        <div class="info-label">Mã đơn</div>
+                        <div class="info-value">@orderCode</div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-label">Thời gian thanh toán</div>
+                        <div class="info-value">@paidAt</div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-label">Trạng thái</div>
+                        <div class="info-value">Đã thanh toán</div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-label">Ngày hết hạn VIP</div>
+                        <div class="info-value">@expiredAt</div>
+                    </div>
+                </div>
+
+                <div class="benefit-section">
+                    <div class="section-title">
+                        Quyền lợi đã được áp dụng
+                    </div>
+
+                    <div class="benefit-grid">
+                        <div class="benefit-card">
+                            <div class="benefit-icon">✓</div>
+                            <div class="benefit-title">Tài khoản VIP</div>
+                            <div class="benefit-text">
+                                Hồ sơ của bạn đã được cập nhật trạng thái thành viên VIP.
+                            </div>
+                        </div>
+
+                        <div class="benefit-card">
+                            <div class="benefit-icon">✓</div>
+                            <div class="benefit-title">Tin nổi bật</div>
+                            <div class="benefit-text">
+                                Tin đăng phù hợp được gắn nhãn VIP để tạo sự chú ý với người xem.
+                            </div>
+                        </div>
+
+                        <div class="benefit-card">
+                            <div class="benefit-icon">✓</div>
+                            <div class="benefit-title">Ưu tiên hiển thị</div>
+                            <div class="benefit-text">
+                                Tin VIP được đẩy lên trước trên trang chủ và danh sách tin rao.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <a asp-controller="Posts"
+                       asp-action="MyPosts"
+                       class="main-btn">
+                        Xem tin của tôi
+                    </a>
+
+                    <a asp-controller="Posts"
+                       asp-action="Create"
+                       class="sub-btn">
+                        Đăng tin mới
+                    </a>
+
+                    <a asp-controller="VipPackages"
+                       asp-action="MyOrders"
+                       class="sub-btn">
+                        Lịch sử VIP
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

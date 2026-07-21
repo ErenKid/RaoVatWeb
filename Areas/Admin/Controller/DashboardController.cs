@@ -28,6 +28,8 @@ namespace RaoVatWeb.Areas.Admin.Controllers
         {
             var model = new AdminDashboardViewModel
             {
+                TotalUsers = await _userManager.Users.CountAsync(),
+
                 TotalPosts = await _context.Posts.CountAsync(),
 
                 PendingPosts = await _context.Posts
@@ -42,9 +44,20 @@ namespace RaoVatWeb.Areas.Admin.Controllers
                 HiddenPosts = await _context.Posts
                     .CountAsync(p => p.Status == PostStatus.Hidden),
 
-                TotalUsers = await _userManager.Users.CountAsync(),
-
                 TotalImages = await _context.PostImages.CountAsync(),
+
+                TotalCategories = await _context.Categories.CountAsync(),
+
+                TotalAreas = await _context.Areas.CountAsync(),
+
+                TotalVipOrders = await _context.VipOrders.CountAsync(),
+
+                PaidVipOrders = await _context.VipOrders
+                    .CountAsync(x => x.Status == VipOrderStatus.Paid),
+
+                TotalVipRevenue = await _context.VipOrders
+                    .Where(x => x.Status == VipOrderStatus.Paid)
+                    .SumAsync(x => x.Amount),
 
                 RecentPosts = await _context.Posts
                     .Include(p => p.Category)

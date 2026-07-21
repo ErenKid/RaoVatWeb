@@ -13,6 +13,8 @@ namespace RaoVatWeb.Models
         [Required]
         public string SenderId { get; set; } = string.Empty;
 
+        public ApplicationUser? Sender { get; set; }
+
         [Required]
         public string Content { get; set; } = string.Empty;
 
